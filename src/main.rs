@@ -1,3 +1,9 @@
+use crate::schedule::Schedule;
+
+mod schedule;
+mod constraints;
+
 fn main() {
-    println!("Hello, world!");
+    let mut schedule = Schedule::new(); 
+
 }
