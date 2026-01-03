@@ -7,7 +7,7 @@ pub struct Schedule {
 }
 
 impl Schedule {
-    pub fn new() -> Schedule {
+    pub fn new() -> Self {
         Schedule {
             grid: array::from_fn(|_| array::from_fn(|_| None)),
         }
