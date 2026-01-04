@@ -1,7 +1,7 @@
 use crate::constraints::Constraint;
 
 pub fn calculate_validity_based_penalty(constraint: &Constraint) -> u32 {
-    if is_constraint_scheduled(constraint) {
+    if !is_constraint_scheduled(constraint) {
         match constraint.priority {
             super::ConstraintPriority::High => return 10,
             super::ConstraintPriority::Low => return 5,

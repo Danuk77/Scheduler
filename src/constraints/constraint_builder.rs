@@ -7,7 +7,7 @@ use crate::constraints::{Constraint, ConstraintPriority, penalty::Penalty};
 /// A simple builder class used for building constraints
 /// As part of building the constraint, its relevant penalty function is generated.
 /// The generated penalty function depends on the parameters used when building the constraint.
-struct ConstraintBuilder {
+pub struct ConstraintBuilder {
     constraint_id: Option<u32>,
     constraint_name: Option<String>,
     priority: Option<ConstraintPriority>,
