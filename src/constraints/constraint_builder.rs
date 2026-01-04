@@ -2,6 +2,8 @@ use anyhow::{Context, Result, anyhow};
 
 use crate::constraints::{Constraint, ConstraintPriority, penalty::Penalty};
 
+// TODO: Add a frequency based parameter, which returns multiple constraints based on the frequency
+
 /// A simple builder class used for building constraints
 /// As part of building the constraint, its relevant penalty function is generated.
 /// The generated penalty function depends on the parameters used when building the constraint.
@@ -109,6 +111,7 @@ impl ConstraintBuilder {
                 .constraint_id
                 .clone()
                 .context("Please ensure an id is given for the constraint")?,
+            scheduled_slot: None,
             penalties: self.penalties.clone(),
             priority: self
                 .priority
