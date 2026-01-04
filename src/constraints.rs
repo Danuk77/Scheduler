@@ -70,6 +70,7 @@ impl Constraint {
                 Penalty::PreferredSlots => {
                     total_penalty += calculate_preferred_slots_based_penalty(self)
                 }
+                // TODO: Implement
                 Penalty::Gap => total_penalty += calculate_gap_based_penalty(self),
             }
         }
