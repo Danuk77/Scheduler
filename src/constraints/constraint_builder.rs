@@ -1,4 +1,6 @@
-use crate::constraints::{Constraint, ConstraintPriority};
+use anyhow::{Context, Result, anyhow};
+
+use crate::constraints::{Constraint, ConstraintPriority, penalty::Penalty};
 
 /// A simple builder class used for building constraints
 /// As part of building the constraint, its relevant penalty function is generated.
@@ -11,6 +13,7 @@ struct ConstraintBuilder {
     gap: Option<u8>,
     allowed_slots: Option<Vec<(u8, u8)>>,
     preferred_slots: Option<Vec<(u8, u8)>>,
+    penalties: Vec<Penalty>,
 }
 
 impl ConstraintBuilder {
@@ -22,7 +25,8 @@ impl ConstraintBuilder {
             duration: None,
             gap: None,
             allowed_slots: None,
-            preferred_slots: None
+            preferred_slots: None,
+            penalties: Vec::new(),
         }
     }
 
@@ -53,6 +57,7 @@ impl ConstraintBuilder {
     /// i.e. A 2 hour constraint will take 4 slots (each slot is 30 minutes)
     pub fn set_duration(mut self, duration: u8) -> Self {
         self.duration = Some(duration);
+        self.penalties.push(Penalty::Validity);
         self
     }
 
@@ -60,6 +65,7 @@ impl ConstraintBuilder {
     /// i.e. Assume two
     pub fn set_gap(mut self, gap: u8) -> Self {
         self.gap = Some(gap);
+        self.penalties.push(Penalty::Gap);
         self
     }
 
@@ -68,6 +74,7 @@ impl ConstraintBuilder {
     /// slots Vec<(u8, u8)> - Used for specifying the the day and the index of the slot
     pub fn set_allowed_slots(mut self, slots: Vec<(u8, u8)>) -> Self {
         self.allowed_slots = Some(slots);
+        self.penalties.push(Penalty::AllowedSlots);
         self
     }
 
@@ -77,6 +84,42 @@ impl ConstraintBuilder {
     /// slots Vec<(u8, u8)> - Used for specifying the the day and the index of the slot
     pub fn set_preferred_slots(mut self, slots: Vec<(u8, u8)>) -> Self {
         self.preferred_slots = Some(slots);
+        self.penalties.push(Penalty::PreferredSlots);
         self
+    }
+
+    /// Builds and returns the constraint specified
+    ///
+    /// Does not panic
+    ///
+    /// Returns Err when a required field is not or validation fails
+    pub fn build(&self) -> Result<Constraint> {
+        if self.penalties.is_empty() {
+            return Err(anyhow!(
+                "Empty constraint, please ensure criteria is specified for the constraint"
+            ));
+        }
+
+        Ok(Constraint {
+            name: self
+                .constraint_name
+                .clone()
+                .context("Please ensure the name is set for constraint")?,
+            id: self
+                .constraint_id
+                .clone()
+                .context("Please ensure an id is given for the constraint")?,
+            penalties: self.penalties.clone(),
+            priority: self
+                .priority
+                .clone()
+                .context("Please ensure the priority is set for the constraint")?,
+            duration: self
+                .duration
+                .context("Please ensure the duration is specified for the constraint")?,
+            gap: self.gap,
+            allowed_slots: self.allowed_slots.clone(),
+            preferred_slots: self.preferred_slots.clone(),
+        })
     }
 }

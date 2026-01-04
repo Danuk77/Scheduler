@@ -1,9 +1,8 @@
 use std::array;
 
-use crate::constraints::Constraint;
-
 pub struct Schedule {
-    pub grid: [[Option<Constraint>; 48]; 7],
+    pub grid: [[Option<u32>; 48]; 7], // Option<u32> stores the id of the constraint, or None if
+                                      // nothing is scheduled
 }
 
 impl Schedule {
