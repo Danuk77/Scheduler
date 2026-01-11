@@ -1,7 +1,7 @@
 use crate::constraints::Constraint;
 
 pub fn calculate_validity_based_penalty(constraint: &Constraint) -> u32 {
-    if !is_constraint_scheduled(constraint) {
+    if !constraint.is_scheduled() {
         match constraint.priority {
             super::ConstraintPriority::High => return 10,
             super::ConstraintPriority::Low => return 5,
@@ -11,18 +11,10 @@ pub fn calculate_validity_based_penalty(constraint: &Constraint) -> u32 {
     0
 }
 
-fn is_constraint_scheduled(constraint: &Constraint) -> bool {
-    if let None = constraint.scheduled_slot {
-        return false;
-    }
-
-    true
-}
-
 pub fn calculate_allowed_slots_based_penalty(constraint: &Constraint) -> u32 {
     // NOTE: If it isnt scheduled, the validity based penalty will be applied and we are not going
     // to apply the allowed slots based penalty again
-    if !is_constraint_scheduled(constraint) {
+    if !constraint.is_scheduled() {
         return 0;
     }
 
@@ -46,7 +38,7 @@ pub fn calculate_allowed_slots_based_penalty(constraint: &Constraint) -> u32 {
 pub fn calculate_preferred_slots_based_penalty(constraint: &Constraint) -> u32 {
     // NOTE: If it isnt scheduled, the validity based penalty will be applied and we are not going
     // to apply the allowed slots based penalty again
-    if !is_constraint_scheduled(constraint) {
+    if !constraint.is_scheduled() {
         return 0;
     }
 

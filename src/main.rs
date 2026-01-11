@@ -1,4 +1,4 @@
-use crate::{constraints::Constraint, hill_climber::{calculate_penalty, generate_initial_state}, schedule::Schedule};
+use crate::{constraints::Constraint, hill_climber::run_hill_climber};
 
 mod constraints;
 mod hill_climber;
@@ -8,13 +8,11 @@ use anyhow::Result;
 use constraints::constraint_builder::ConstraintBuilder;
 
 fn main() -> Result<()> {
-    let mut schedule = Schedule::new();
-    let mut builder = ConstraintBuilder::new();
-
     // TODO: We may benefit from implementing a data structure to store the constraints in a
     // particular order
     let mut constraints: Vec<Constraint> = Vec::new();
 
+    let mut builder = ConstraintBuilder::new();
     constraints.push(
         builder
             .set_id(1)
@@ -58,9 +56,7 @@ fn main() -> Result<()> {
             .build()?,
     );
 
-    generate_initial_state(&mut constraints, &mut schedule);
-    let penalty = calculate_penalty(&constraints);
-    println!("{:?}", penalty);
+    run_hill_climber(&mut constraints, 10000);
 
     Ok(())
 }

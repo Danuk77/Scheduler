@@ -31,6 +31,7 @@ pub enum ConstraintPriority {
 /// * `preferred_slots` - Optional list of preferred time slots as (day, slot) tuples (Only the
 /// start slot is specified)
 /// * `scheduled_slot` - The currently assigned time slot, if scheduled
+#[derive(Clone)]
 pub struct Constraint {
     pub name: String,
     pub id: u32,
@@ -76,5 +77,14 @@ impl Constraint {
         }
 
         total_penalty
+    }
+
+    /// Returns whether the constraint is scheduled or not
+    pub fn is_scheduled(&self) -> bool{
+        if let Some(_) = self.scheduled_slot{
+            return true;
+        }
+
+        false
     }
 }

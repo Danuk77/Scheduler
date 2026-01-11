@@ -2,6 +2,7 @@ use std::{array, usize};
 
 use crate::constraints::Constraint;
 
+#[derive(Clone)]
 pub struct Schedule {
     pub grid: [[Option<u32>; 48]; 7], // Option<u32> stores the id of the constraint, or None if
                                   // nothing is scheduled
