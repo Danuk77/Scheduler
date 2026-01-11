@@ -111,7 +111,6 @@ impl ConstraintBuilder {
                 .constraint_id
                 .clone()
                 .context("Please ensure an id is given for the constraint")?,
-            scheduled_slot: None,
             penalties: self.penalties.clone(),
             priority: self
                 .priority
