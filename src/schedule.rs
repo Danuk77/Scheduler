@@ -1,7 +1,10 @@
+pub mod errors;
+
 use std::collections::HashMap;
 use std::{array, usize};
 
 use crate::constraints::Constraint;
+use crate::schedule::errors::ScheduleError;
 
 #[derive(Clone)]
 pub struct Slot {
@@ -29,10 +32,10 @@ impl Schedule {
             Some(slots) => {
                 return slots
                     .iter()
-                    .find(|slot| is_duration_free(slot, constraint.duration, &self.grid))
+                    .find(|slot| self.is_duration_free(slot, constraint.duration))
                     .map(|free_slot| Slot {
-                        day: free_slot.0,
-                        window: free_slot.1,
+                        day: free_slot.day,
+                        window: free_slot.window,
                     });
             }
             None => {
@@ -52,7 +55,7 @@ impl Schedule {
                     continue;
                 }
                 Some(_) => {
-                    if is_duration_free(&s, constraint.duration, &self.grid) {
+                    if self.is_duration_free(&s, constraint.duration) {
                         return Some(s);
                     } else {
                         // TODO: The index should be incremented by the duration of the scheduled
@@ -72,12 +75,39 @@ impl Schedule {
     /// # Arguments
     /// * constraint - The constraint to schedule
     /// * slot - The slot to schedule the constraint at
-    pub fn schedule_constraint(&mut self, constraint: &Constraint, slot: Slot) {
-        for i in 0..constraint.duration {
-            self.grid[slot.day as usize][(slot.window + i) as usize] = Some(constraint.id);
+    pub fn schedule_constraint(
+        &mut self,
+        constraint_id: u32,
+        constraint_duration: u8,
+        slot: &Slot,
+    ) {
+        for i in 0..constraint_duration {
+            self.grid[slot.day as usize][(slot.window + i) as usize] = Some(constraint_id);
         }
 
-        self.scheduled_constraints.insert(constraint.id, slot);
+        self.scheduled_constraints
+            .insert(constraint_id, slot.clone());
+    }
+
+    /// Unschedules a constraint from its scheduled slot in the schedule
+    ///
+    /// # Doesn't panic
+    ///
+    /// # Arguments
+    /// * constraint - The constraint to unschedule
+    pub fn unschedule_constraint(
+        &mut self,
+        constraint: &Constraint,
+    ) -> Result<Slot, ScheduleError> {
+        let Some(scheduled_slot) = self.scheduled_constraints.remove(&constraint.id) else {
+            return Err(ScheduleError::ConstraintNotScheduled(constraint.id));
+        };
+
+        for i in 0..constraint.duration {
+            self.grid[scheduled_slot.day as usize][(scheduled_slot.window + i) as usize] = None;
+        }
+
+        Ok(scheduled_slot)
     }
 
     /// Returns whether a specific constraint is scheduled or not
@@ -87,49 +117,84 @@ impl Schedule {
     pub fn is_constraint_scheduled(&self, constraint_id: u32) -> bool {
         self.scheduled_constraints.contains_key(&constraint_id)
     }
-}
 
-/// Given a slot index, a duration and a grid, checks if the slot specified by the index is free
-/// for the specified duration
-///
-/// # Arguments
-/// * slot_index - The index of the slot
-/// * duration - The duration to check for
-/// * grid - The grid containing the schedule
-///
-/// Does not panic
-///
-/// # Returns
-/// * true if it is free
-/// * false otherwise
-fn is_duration_free(slot: &Slot, duration: u8, grid: &[[Option<u32>; 48]; 7]) -> bool {
-    for i in 0..duration {
-        if !is_slot_free(&(slot.day, slot.window + i), grid) {
+    /// Returns `true` if a range of slots is either empty or occupied
+    /// exclusively by the specified constraint.
+    ///
+    /// # Arguments
+    /// * `constraint_id` - The ID to allow; any other ID found will cause this to return `false`.
+    /// * `duration` - The number of consecutive slots to check.
+    /// * `start_slot` - The initial slot (day and window) to begin the check.
+    ///
+    /// # Returns
+    /// * `true` if all slots in the range are `None` or match `constraint_id`.
+    /// * `false` if the range exceeds the grid bounds or contains a different ID.
+    pub fn is_duration_free_or_owned_by(
+        &self,
+        constraint_id: &u32,
+        duration: u8,
+        start_slot: &Slot,
+    ) -> bool {
+        let Some(day) = self.grid.get(start_slot.day as usize) else {
             return false;
+        };
+
+        for i in 0..duration {
+            let Some(window) = day.get((start_slot.window + i) as usize) else {
+                return false;
+            };
+
+            if let Some(scheduled_constraint_id) = window {
+                if scheduled_constraint_id != constraint_id {
+                    return false;
+                }
+            }
         }
-    }
 
-    true
-}
-
-/// Given a slot index and a grid, checks if the slot specified by the index is free
-///
-/// # Arguments
-/// * slot_index - The index of the slot
-/// * grid - The grid containing the schedule
-///
-/// Does not panic
-///
-/// # Returns
-/// * true if it is free
-/// * false otherwise
-fn is_slot_free(slot_index: &(u8, u8), grid: &[[Option<u32>; 48]; 7]) -> bool {
-    if let Some(None) = grid
-        .get(slot_index.0 as usize)
-        .and_then(|day| day.get(slot_index.1 as usize))
-    {
         return true;
     }
 
-    false
+    /// Given a slot index, a duration and a grid, checks if the slot specified by the index is free
+    /// for the specified duration
+    ///
+    /// # Arguments
+    /// * slot_index - The index of the slot
+    /// * duration - The duration to check for
+    ///
+    /// Does not panic
+    ///
+    /// # Returns
+    /// * true if it is free
+    /// * false otherwise
+    pub fn is_duration_free(&self, slot: &Slot, duration: u8) -> bool {
+        for i in 0..duration {
+            if !self.is_slot_free(&(slot.day, slot.window + i)) {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    /// Given a slot index and a grid, checks if the slot specified by the index is free
+    ///
+    /// # Arguments
+    /// * slot_index - The index of the slot
+    ///
+    /// Does not panic
+    ///
+    /// # Returns
+    /// * true if it is free
+    /// * false otherwise
+    pub fn is_slot_free(&self, slot_index: &(u8, u8)) -> bool {
+        if let Some(None) = self
+            .grid
+            .get(slot_index.0 as usize)
+            .and_then(|day| day.get(slot_index.1 as usize))
+        {
+            return true;
+        }
+
+        false
+    }
 }

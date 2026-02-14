@@ -1,6 +1,9 @@
 use anyhow::{Context, Result, anyhow};
 
-use crate::constraints::{Constraint, ConstraintPriority, penalty::Penalty};
+use crate::{
+    constraints::{Constraint, ConstraintPriority, penalty::Penalty},
+    schedule::Slot,
+};
 
 // TODO: Add a frequency based parameter, which returns multiple constraints based on the frequency
 
@@ -13,8 +16,8 @@ pub struct ConstraintBuilder {
     priority: Option<ConstraintPriority>,
     duration: Option<u8>,
     gap: Option<u8>,
-    allowed_slots: Option<Vec<(u8, u8)>>,
-    preferred_slots: Option<Vec<(u8, u8)>>,
+    allowed_slots: Option<Vec<Slot>>,
+    preferred_slots: Option<Vec<Slot>>,
     penalties: Vec<Penalty>,
 }
 
@@ -71,20 +74,22 @@ impl ConstraintBuilder {
         self
     }
 
+    // TODO: Change this to setting single allowed slot
     /// Set the slots this constraint is allowed to take
     /// # Arguments
     /// slots Vec<(u8, u8)> - Used for specifying the the day and the index of the slot
-    pub fn set_allowed_slots(mut self, slots: Vec<(u8, u8)>) -> Self {
+    pub fn set_allowed_slots(mut self, slots: Vec<Slot>) -> Self {
         self.allowed_slots = Some(slots);
         self.penalties.push(Penalty::AllowedSlots);
         self
     }
 
+    // TODO: Change this to setting single preferred slot
     /// Set the slots this constraint should prefer to take (The scheduled slot may not always be
     /// at a preferred slot)
     /// # Arguments
     /// slots Vec<(u8, u8)> - Used for specifying the the day and the index of the slot
-    pub fn set_preferred_slots(mut self, slots: Vec<(u8, u8)>) -> Self {
+    pub fn set_preferred_slots(mut self, slots: Vec<Slot>) -> Self {
         self.preferred_slots = Some(slots);
         self.penalties.push(Penalty::PreferredSlots);
         self

@@ -1,4 +1,4 @@
-use crate::{constraints::Constraint, hill_climber::run_hill_climber};
+use crate::{constraints::constraint_store::ConstraintStore, hill_climber::run_hill_climber};
 
 mod constraints;
 mod hill_climber;
@@ -8,9 +8,7 @@ use anyhow::Result;
 use constraints::constraint_builder::ConstraintBuilder;
 
 fn main() -> Result<()> {
-    // TODO: We may benefit from implementing a data structure to store the constraints in a
-    // particular order
-    let mut constraints: Vec<Constraint> = Vec::new();
+    let mut constraints: ConstraintStore = ConstraintStore::new();
 
     let mut builder = ConstraintBuilder::new();
     constraints.push(

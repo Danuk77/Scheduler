@@ -1,13 +1,16 @@
-use crate::{constraints::{
-    penalties::{
-        calculate_allowed_slots_based_penalty, calculate_gap_based_penalty,
-        calculate_preferred_slots_based_penalty, calculate_validity_based_penalty,
+use crate::{
+    constraints::{
+        penalties::{
+            calculate_allowed_slots_based_penalty, calculate_gap_based_penalty,
+            calculate_preferred_slots_based_penalty, calculate_validity_based_penalty,
+        },
+        penalty::Penalty,
     },
-    penalty::Penalty,
-}, schedule::Schedule};
+    schedule::{Schedule, Slot},
+};
 
-pub mod constraint_store;
 pub mod constraint_builder;
+pub mod constraint_store;
 pub mod penalties;
 pub mod penalty;
 
@@ -40,8 +43,8 @@ pub struct Constraint {
     pub priority: ConstraintPriority,
     pub duration: u8,
     pub gap: Option<u8>,
-    pub allowed_slots: Option<Vec<(u8, u8)>>,
-    pub preferred_slots: Option<Vec<(u8, u8)>>,
+    pub allowed_slots: Option<Vec<Slot>>,
+    pub preferred_slots: Option<Vec<Slot>>,
 }
 
 impl Constraint {

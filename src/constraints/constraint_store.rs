@@ -39,6 +39,24 @@ impl ConstraintStore {
         let index = distribution.sample(&mut self.rng);
         self.constraints.get(index)
     }
+
+    pub fn find_swappable_scheduled_constraint(
+        &self,
+        constraint_id: u32,
+        constraint_duration: u8,
+        schedule: &Schedule,
+    ) -> Option<&Constraint> {
+        let compatible_constriants: Vec<&Constraint> = self
+            .constraints
+            .iter()
+            .filter(|c| {
+                (c.id != constraint_id && c.duration >= constraint_duration)
+                    && schedule.is_constraint_scheduled(c.id)
+            })
+            .collect();
+
+        compatible_constriants.choose(&mut rng()).copied()
+    }
 }
 
 impl<'a> IntoIterator for &'a mut ConstraintStore {
