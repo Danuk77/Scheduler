@@ -2,7 +2,7 @@ pub mod change_types;
 pub mod make_small_change;
 
 use crate::{constraints::constraint_store::ConstraintStore, schedule::Schedule};
-use make_small_change::make_small_change;
+use make_small_change::evolve_schedule;
 
 pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> Schedule {
     let mut schedule = Schedule::new();
@@ -14,8 +14,7 @@ pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> S
     let mut best_penalty = penalty.clone();
 
     for _ in 0..iterations {
-        // TODO: Return enum of what change was made from this function
-        let change = make_small_change(constraints, &mut schedule);
+        let change = evolve_schedule(constraints, &mut schedule);
         let new_penalty = constraints.calculate_penalties(&schedule);
 
         if new_penalty <= penalty {

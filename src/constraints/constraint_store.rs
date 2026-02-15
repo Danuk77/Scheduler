@@ -57,6 +57,10 @@ impl ConstraintStore {
 
         compatible_constriants.choose(&mut rng()).copied()
     }
+
+    pub fn get_constraint(&self, constraint_id: u32) -> Option<&Constraint> {
+        return self.constraints.iter().find(|c| c.id == constraint_id);
+    }
 }
 
 impl<'a> IntoIterator for &'a mut ConstraintStore {

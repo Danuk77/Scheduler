@@ -27,24 +27,33 @@ impl Schedule {
         }
     }
 
-    pub fn get_slot_for_constraint(&self, constraint: &Constraint) -> Option<Slot> {
-        match &constraint.allowed_slots {
-            Some(slots) => {
-                return slots
-                    .iter()
-                    .find(|slot| self.is_duration_free(slot, constraint.duration))
-                    .map(|free_slot| Slot {
-                        day: free_slot.day,
-                        window: free_slot.window,
-                    });
-            }
-            None => {
-                return self.find_free_slot(constraint);
-            }
+    /// Finds a slot compatible to schedule a constraint
+    /// # Arguments
+    /// * constraint_duration - The duration of the constraint to find a slot
+    /// * allowed_slots - The slots the constraint is allowed to be in
+    ///
+    /// # Returns
+    /// * Slot - The slot representing the starting point to schedule the constraint to
+    /// * None - If no slot exists for the specified duration
+    pub fn get_slot_for_constraint(
+        &self,
+        constraint_duration: u8,
+        allowed_slots: &Option<Vec<Slot>>,
+    ) -> Option<Slot> {
+        if let Some(slots) = allowed_slots {
+            return slots
+                .iter()
+                .find(|slot| self.is_duration_free(slot, constraint_duration))
+                .map(|free_slot| Slot {
+                    day: free_slot.day,
+                    window: free_slot.window,
+                });
+        } else {
+            return self.find_free_slot(constraint_duration);
         }
     }
 
-    fn find_free_slot(&self, constraint: &Constraint) -> Option<Slot> {
+    fn find_free_slot(&self, constraint_duration: u8) -> Option<Slot> {
         let mut s: Slot = Slot { day: 0, window: 0 };
         loop {
             let day_slots = self.grid.get(s.day as usize)?;
@@ -55,7 +64,7 @@ impl Schedule {
                     continue;
                 }
                 Some(_) => {
-                    if self.is_duration_free(&s, constraint.duration) {
+                    if self.is_duration_free(&s, constraint_duration) {
                         return Some(s);
                     } else {
                         // TODO: The index should be incremented by the duration of the scheduled
@@ -91,19 +100,23 @@ impl Schedule {
 
     /// Unschedules a constraint from its scheduled slot in the schedule
     ///
-    /// # Doesn't panic
-    ///
     /// # Arguments
-    /// * constraint - The constraint to unschedule
+    /// * constraint_id - The id of the constraint to unschedule
+    /// * constraint_duratin - The duration of the constraint
+    ///
+    /// # Returns
+    /// * Slot - The freed up slot after unscheduling
+    /// * ScheduleError - If trying to unschedule a constraint that is not scheduled
     pub fn unschedule_constraint(
         &mut self,
-        constraint: &Constraint,
+        constraint_id: u32,
+        constraint_duration: u8,
     ) -> Result<Slot, ScheduleError> {
-        let Some(scheduled_slot) = self.scheduled_constraints.remove(&constraint.id) else {
-            return Err(ScheduleError::ConstraintNotScheduled(constraint.id));
+        let Some(scheduled_slot) = self.scheduled_constraints.remove(&constraint_id) else {
+            return Err(ScheduleError::ConstraintNotScheduled(constraint_id));
         };
 
-        for i in 0..constraint.duration {
+        for i in 0..constraint_duration {
             self.grid[scheduled_slot.day as usize][(scheduled_slot.window + i) as usize] = None;
         }
 
