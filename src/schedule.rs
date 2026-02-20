@@ -3,7 +3,6 @@ pub mod errors;
 use std::collections::HashMap;
 use std::{array, usize};
 
-use crate::constraints::Constraint;
 use crate::schedule::errors::ScheduleError;
 
 #[derive(Clone)]

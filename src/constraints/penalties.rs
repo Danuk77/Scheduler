@@ -1,4 +1,37 @@
-use crate::constraints::Constraint;
+use std::collections::HashMap;
+
+use crate::{
+    constraints::{Constraint, constraint_store::ConstraintStore},
+    schedule::Schedule,
+};
+
+/// Calculates the penalties for a set of constraints under a certain schedule
+///
+/// # Arguments
+/// * `constraints` - The constraints to evaluate the penalties for
+/// * `schedule` - The schedule to evaluate the constraints for penalties under
+///
+/// # Returns
+/// (
+///     HashMap<u32, u32> - A hashmap with keys being constraint id and the value being the
+///     calculated penalty,
+///     u32 - The total penalty incurred
+/// )
+pub fn calculate_penalties(
+    constraints: &ConstraintStore,
+    schedule: &Schedule,
+) -> (HashMap<u32, u32>, u32) {
+    let mut penalties: HashMap<u32, u32> = HashMap::new();
+    let mut total_penalty = 0;
+
+    for constraint in constraints.into_iter() {
+        let constraint_penalty = constraint.calculate_penalty(schedule);
+        penalties.insert(constraint.id, constraint_penalty);
+        total_penalty += constraint_penalty;
+    }
+
+    (penalties, total_penalty)
+}
 
 pub fn calculate_validity_based_penalty(constraint: &Constraint) -> u32 {
     if !constraint.is_scheduled() {

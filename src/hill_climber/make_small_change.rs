@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     constraints::constraint_store::ConstraintStore,
     hill_climber::change_types::ChangeType,
@@ -7,17 +9,19 @@ use crate::{
 ///  Runs a single iteration of the hill climbing optimisation algorithm
 ///
 ///  # Arguments
-///  * constraints - The constraints store containing all constraints
-///  * Schedule - The current state of the schedule
+///  * `constraints` - The constraints store containing all constraints
+///  * `incurred_penalties` - The penalties incurred by the constraints under the specified schedule
+///  * `Schedule` - The current state of the schedule
 ///
 ///  # Returns
-///  ChangeType - The type of change made if the state of the schedule is changed
-///  None - If no state change was done on this iteration
+///  `ChangeType` - The type of change made if the state of the schedule is changed
+///  `None` - If no state change was done on this iteration
 pub fn evolve_schedule(
     constraints: &mut ConstraintStore,
+    incurred_penalties: &HashMap<u32, u32>,
     schedule: &mut Schedule,
 ) -> Option<ChangeType> {
-    let constraint = constraints.get_constraint_for_adjustment()?;
+    let constraint = constraints.get_constraint_for_optimisation(incurred_penalties)?;
     let constraint_id = constraint.id;
     let constraint_duration = constraint.duration;
     let allowed_slots = constraint.allowed_slots.clone();
@@ -87,8 +91,9 @@ fn find_alternative_slot(
     allowed_slots: Option<Vec<Slot>>,
     schedule: &Schedule,
 ) -> Option<Slot> {
-    if let Some(slot) = allowed_slots {
-        return slot
+    // TODO: We can add some randomness into the order in the allowed slots are considered
+    if let Some(slots) = allowed_slots {
+        return slots
             .iter()
             .find(|slot| schedule.is_duration_free(&slot, constraint_duration))
             .cloned();

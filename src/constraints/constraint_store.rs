@@ -1,43 +1,56 @@
+use std::collections::HashMap;
+
 use crate::{constraints::Constraint, schedule::Schedule};
+use rand::prelude::*;
 use rand::rng;
-use rand::{distr::weighted::WeightedIndex, prelude::*};
 
 #[derive(Clone)]
+/// Structure used for storing arbitrary constraints for optimisation
 pub struct ConstraintStore {
     constraints: Vec<Constraint>,
-    penalties: Vec<u32>,
     rng: ThreadRng,
 }
 
 impl ConstraintStore {
+    /// Create a new empty constraint store
     pub fn new() -> Self {
         return ConstraintStore {
             constraints: Vec::new(),
-            penalties: Vec::new(),
             rng: rng(),
         };
     }
 
-    pub fn calculate_penalties(&mut self, schedule: &Schedule) -> u32 {
-        let mut total_penalty = 0;
-        for (i, constraint) in self.constraints.iter().enumerate() {
-            let constraint_penalty = constraint.calculate_penalty(schedule);
-            self.penalties[i] = constraint_penalty;
-            total_penalty += constraint_penalty;
-        }
-
-        total_penalty
-    }
-
+    /// Add a new constraint to the store
+    ///
+    /// # Arguments
+    /// * `constraint` - The constraint to store
+    ///
+    /// # Returns
+    /// None
     pub fn push(&mut self, constraint: Constraint) {
         self.constraints.push(constraint);
-        self.penalties.push(0);
     }
 
-    pub fn get_constraint_for_adjustment(&mut self) -> Option<&Constraint> {
-        let distribution = WeightedIndex::new(&self.penalties).ok()?;
-        let index = distribution.sample(&mut self.rng);
-        self.constraints.get(index)
+    /// Retrieves a constraint for optimisation from the store
+    ///
+    /// Randomly selects a constraint weighted by the penalties specified
+    ///
+    /// # Arguments
+    /// `penalties` - The penalties incurred by the constraints
+    ///
+    /// # Returns
+    /// * `&Constraint` - The constraint selected for optimisation
+    /// * `None` - If no constraint was selected
+    pub fn get_constraint_for_optimisation(
+        &mut self,
+        penalties: &HashMap<u32, u32>,
+    ) -> Option<&Constraint> {
+        self.constraints
+            .choose_weighted(&mut self.rng, |c| {
+                *penalties.get(&c.id)
+                    .expect("Error: encountered inconsistent constraint ids between penalty calculation and constraint store")
+            })
+            .ok()
     }
 
     pub fn find_swappable_scheduled_constraint(
