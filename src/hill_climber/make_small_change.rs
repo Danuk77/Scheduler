@@ -97,6 +97,18 @@ fn find_alternative_slot(
     return schedule.get_slot_for_constraint(constraint_duration, &allowed_slots);
 }
 
+/// Function called when trying to optimise a constraint that is not yet scheduled
+///
+/// # Arguments
+/// * constraint_id - The id of the constraint to be optimised
+/// * constraint_duration - The duration of the constraint to be optimised
+/// * allowed_slots_for_constraint - The slots the constraint is allowed to take
+/// * schedule - The current state of the schedule
+/// * constraint_store - The store containing all constraints
+///
+/// # Returns
+/// * ChangeType - The type of optimisation performed
+/// * None - If no optimisation was performed
 fn handle_unscheduled_constraint(
     constraint_id: u32,
     constraint_duration: u8,
