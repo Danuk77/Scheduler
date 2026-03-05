@@ -5,7 +5,7 @@ use std::{array, usize};
 
 use crate::schedule::errors::ScheduleError;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Slot {
     pub day: u8,
     pub window: u8,
@@ -128,6 +128,18 @@ impl Schedule {
     /// * bool - Whether scheduled or not
     pub fn is_constraint_scheduled(&self, constraint_id: u32) -> bool {
         self.scheduled_constraints.contains_key(&constraint_id)
+    }
+
+    /// Returns the scheduled slot for the given constraint id
+    ///
+    /// # Arguments
+    /// * `constraint_id` - The id of the constraint to return the scheduled slot for
+    ///
+    /// # Returns
+    /// * `&Slot` - The scheduled slot
+    /// * `None` - If the constraint is not scheduled
+    pub fn get_scheduled_slot_for_constraint(&self, constraint_id: u32) -> Option<&Slot> {
+        self.scheduled_constraints.get(&constraint_id)
     }
 
     /// Returns `true` if a range of slots is either empty or occupied

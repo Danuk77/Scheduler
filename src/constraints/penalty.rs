@@ -1,6 +1,6 @@
 #[derive(Clone, Copy)]
 pub enum Penalty{
-    Validity,
+    Presence,
     AllowedSlots,
     PreferredSlots,
     Gap

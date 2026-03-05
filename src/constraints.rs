@@ -2,7 +2,7 @@ use crate::{
     constraints::{
         penalties::{
             calculate_allowed_slots_based_penalty, calculate_gap_based_penalty,
-            calculate_preferred_slots_based_penalty, calculate_validity_based_penalty,
+            calculate_preferred_slots_based_penalty, calculate_presence_based_penalty,
         },
         penalty::Penalty,
     },
@@ -57,12 +57,14 @@ impl Constraint {
 
         for penalty in &self.penalties {
             match penalty {
-                Penalty::Validity => total_penalty += calculate_validity_based_penalty(self),
+                Penalty::Presence => {
+                    total_penalty += calculate_presence_based_penalty(self, schedule)
+                }
                 Penalty::AllowedSlots => {
-                    total_penalty += calculate_allowed_slots_based_penalty(self)
+                    total_penalty += calculate_allowed_slots_based_penalty(self, schedule)
                 }
                 Penalty::PreferredSlots => {
-                    total_penalty += calculate_preferred_slots_based_penalty(self)
+                    total_penalty += calculate_preferred_slots_based_penalty(self, schedule)
                 }
                 // TODO: Implement
                 Penalty::Gap => total_penalty += calculate_gap_based_penalty(self),
