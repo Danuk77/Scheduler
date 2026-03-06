@@ -78,22 +78,22 @@ impl ConstraintBuilder {
     /// Set the slots this constraint is allowed to take
     /// # Arguments
     /// slots Vec<(u8, u8)> - Used for specifying the the day and the index of the slot
-    pub fn set_allowed_slots(mut self, slots: Vec<Slot>) -> Self {
-        self.allowed_slots = Some(slots);
-        self.penalties.push(Penalty::AllowedSlots);
-        self
-    }
+    //pub fn set_allowed_slots(mut self, slots: Vec<Slot>) -> Self {
+    //    self.allowed_slots = Some(slots);
+    //    self.penalties.push(Penalty::AllowedSlots);
+    //    self
+    //}
 
     // TODO: Change this to setting single preferred slot
     /// Set the slots this constraint should prefer to take (The scheduled slot may not always be
     /// at a preferred slot)
     /// # Arguments
     /// slots Vec<(u8, u8)> - Used for specifying the the day and the index of the slot
-    pub fn set_preferred_slots(mut self, slots: Vec<Slot>) -> Self {
-        self.preferred_slots = Some(slots);
-        self.penalties.push(Penalty::PreferredSlots);
-        self
-    }
+    //pub fn set_preferred_slots(mut self, slots: Vec<Slot>) -> Self {
+    //    self.preferred_slots = Some(slots);
+    //    self.penalties.push(Penalty::PreferredSlots);
+    //    self
+    //}
 
     /// Builds and returns the constraint specified
     ///

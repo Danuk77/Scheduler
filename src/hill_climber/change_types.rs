@@ -7,8 +7,8 @@ use crate::schedule::{Schedule, Slot};
 pub enum ChangeType {
     /// A constraint was moved from one time slot to another.
     ///
-    /// Fields: `(constraint_id, new_slot, previous_slot, duration)`
-    Move(u32, Slot, Slot, u8),
+    /// Fields: `(constraint_id, previous_slot, duration)`
+    Move(u32, Slot, u8),
 
     /// A previously unscheduled constraint was added to the schedule.
     ///
@@ -34,13 +34,19 @@ impl ChangeType {
     ///   is not found where the system expected it to be.
     pub fn revert_change(&self, schedule: &mut Schedule) {
         match self {
-            ChangeType::Move(constraint_id, _, previous_slot, constraint_duration) => {
-                schedule.unschedule_constraint(*constraint_id, *constraint_duration);
+            ChangeType::Move(constraint_id, previous_slot, constraint_duration) => {
+                schedule
+                    .unschedule_constraint(*constraint_id, *constraint_duration)
+                    .expect("Unexpected logic error when unscheduling scheduled constraint");
                 schedule.schedule_constraint(*constraint_id, *constraint_duration, previous_slot);
             }
+
             ChangeType::Scheduled(constraint_id, constraint_duration) => {
-                schedule.unschedule_constraint(*constraint_id, *constraint_duration);
+                schedule
+                    .unschedule_constraint(*constraint_id, *constraint_duration)
+                    .expect("Unexpected logic error when unscheduling scheduled constraint");
             }
+
             ChangeType::Substituted(
                 (new_constraint, new_constraint_duration),
                 (old_constraint, old_constraint_duration),

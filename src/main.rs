@@ -56,7 +56,7 @@ fn main() -> Result<()> {
     );
 
     println!("Running hill climber algorithm");
-    run_hill_climber(&mut constraints, 10000);
+    run_hill_climber(&mut constraints, 10);
     println!("Finished hill climber");
 
     Ok(())

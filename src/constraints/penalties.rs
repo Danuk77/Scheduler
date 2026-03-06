@@ -122,6 +122,6 @@ pub fn calculate_preferred_slots_based_penalty(
 }
 
 // TODO: Implement
-pub fn calculate_gap_based_penalty(constraint: &Constraint) -> u32 {
-    0
-}
+//pub fn calculate_gap_based_penalty(constraint: &Constraint) -> u32 {
+//    0
+//}

@@ -70,7 +70,6 @@ fn handle_scheduled_constraint(
             return Some(ChangeType::Move(
                 constraint_id,
                 previous_slot,
-                slot.clone(),
                 constraint_duration,
             ));
         }

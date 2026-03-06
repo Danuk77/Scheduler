@@ -1,8 +1,8 @@
 use crate::{
     constraints::{
         penalties::{
-            calculate_allowed_slots_based_penalty, calculate_gap_based_penalty,
-            calculate_preferred_slots_based_penalty, calculate_presence_based_penalty,
+            calculate_allowed_slots_based_penalty, calculate_preferred_slots_based_penalty,
+            calculate_presence_based_penalty,
         },
         penalty::Penalty,
     },
@@ -67,7 +67,7 @@ impl Constraint {
                     total_penalty += calculate_preferred_slots_based_penalty(self, schedule)
                 }
                 // TODO: Implement
-                Penalty::Gap => total_penalty += calculate_gap_based_penalty(self),
+                Penalty::Gap => total_penalty += 0, //calculate_gap_based_penalty(self),
             }
         }
 
