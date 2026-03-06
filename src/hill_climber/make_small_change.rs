@@ -142,7 +142,7 @@ fn handle_unscheduled_constraint(
             .unschedule_constraint(swappable_constraint.id, swappable_constraint.duration)
             .expect("Unexpected error ocurred whilst unscheduling constraint");
         schedule.schedule_constraint(constraint_id, constraint_duration, &freed_slot);
-        return Some(ChangeType::Subtituted(
+        return Some(ChangeType::Substituted(
             (constraint_id, constraint_duration),
             (swappable_constraint.id, swappable_constraint.duration),
         ));

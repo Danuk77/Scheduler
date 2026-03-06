@@ -62,7 +62,7 @@ impl ConstraintBuilder {
     /// i.e. A 2 hour constraint will take 4 slots (each slot is 30 minutes)
     pub fn set_duration(mut self, duration: u8) -> Self {
         self.duration = Some(duration);
-        self.penalties.push(Penalty::Validity);
+        self.penalties.push(Penalty::Presence);
         self
     }
 

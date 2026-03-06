@@ -8,6 +8,7 @@ use anyhow::Result;
 use constraints::constraint_builder::ConstraintBuilder;
 
 fn main() -> Result<()> {
+    println!("Initialising constraint store");
     let mut constraints: ConstraintStore = ConstraintStore::new();
 
     let mut builder = ConstraintBuilder::new();
@@ -54,7 +55,9 @@ fn main() -> Result<()> {
             .build()?,
     );
 
+    println!("Running hill climber algorithm");
     run_hill_climber(&mut constraints, 10000);
+    println!("Finished hill climber");
 
     Ok(())
 }
