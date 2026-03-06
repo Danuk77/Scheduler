@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt;
 
 use crate::{constraints::Constraint, schedule::Schedule};
 use rand::prelude::*;
@@ -91,5 +92,11 @@ impl<'a> IntoIterator for &'a ConstraintStore {
 
     fn into_iter(self) -> Self::IntoIter {
         self.constraints.iter()
+    }
+}
+
+impl fmt::Debug for ConstraintStore {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_list().entries(&self.constraints).finish()
     }
 }

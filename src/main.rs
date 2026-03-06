@@ -18,7 +18,6 @@ fn main() -> Result<()> {
             .set_name("a".to_string())
             .set_priority(constraints::ConstraintPriority::High)
             .set_duration(4)
-            .set_gap(96)
             .build()?,
     );
 
@@ -29,7 +28,6 @@ fn main() -> Result<()> {
             .set_name("b".to_string())
             .set_priority(constraints::ConstraintPriority::High)
             .set_duration(4)
-            .set_gap(96)
             .build()?,
     );
 
@@ -40,7 +38,6 @@ fn main() -> Result<()> {
             .set_name("c".to_string())
             .set_priority(constraints::ConstraintPriority::High)
             .set_duration(16)
-            .set_gap(48)
             .build()?,
     );
 
@@ -51,12 +48,11 @@ fn main() -> Result<()> {
             .set_name("d".to_string())
             .set_priority(constraints::ConstraintPriority::High)
             .set_duration(32)
-            .set_gap(32)
             .build()?,
     );
 
     println!("Running hill climber algorithm");
-    run_hill_climber(&mut constraints, 10);
+    run_hill_climber(&mut constraints, 1);
     println!("Finished hill climber");
 
     Ok(())

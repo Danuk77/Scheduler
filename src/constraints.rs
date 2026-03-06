@@ -14,7 +14,7 @@ pub mod constraint_store;
 pub mod penalties;
 pub mod penalty;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ConstraintPriority {
     High,
     Low,
@@ -35,7 +35,7 @@ pub enum ConstraintPriority {
 /// * `preferred_slots` - Optional list of preferred time slots as (day, slot) tuples (Only the
 /// start slot is specified)
 /// * `scheduled_slot` - The currently assigned time slot, if scheduled
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Constraint {
     pub name: String,
     pub id: u32,

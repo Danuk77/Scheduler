@@ -5,7 +5,7 @@ use std::{array, usize};
 
 use crate::schedule::errors::ScheduleError;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Slot {
     pub day: u8,
     pub window: u8,
