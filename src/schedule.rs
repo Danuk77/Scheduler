@@ -1,8 +1,12 @@
 pub mod errors;
 
+use csv::Writer;
+use serde::Serialize;
 use std::collections::HashMap;
+use std::error::Error;
 use std::{array, usize};
 
+use crate::constraints::constraint_store::ConstraintStore;
 use crate::schedule::errors::ScheduleError;
 
 #[derive(Clone, PartialEq, Debug)]
@@ -11,10 +15,11 @@ pub struct Slot {
     pub window: u8,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Schedule {
-    pub grid: [[Option<u32>; 48]; 7], // Option<u32> stores the id of the constraint, or None if
-    // nothing is scheduled
+    #[serde(with = "serde_arrays")]
+    pub grid: [[Option<u32>; 48]; 7], // Option<u32> stores the id of the constraint, or None if nothing is scheduled
+    #[serde(skip_serializing)]
     scheduled_constraints: HashMap<u32, Slot>,
 }
 
@@ -220,5 +225,44 @@ impl Schedule {
         }
 
         false
+    }
+
+    /// Exports the schedule to a csv file
+    ///
+    /// # Arguments
+    /// * `file_name` - The name of the file to export the csv to
+    pub fn export_to_csv(
+        &self,
+        file_name: String,
+        constraint_store: &ConstraintStore,
+    ) -> Result<(), Box<dyn Error>> {
+        let mut csv_writer = Writer::from_path(file_name)?;
+        csv_writer.write_record(&[
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+        ])?;
+        for i in 0..48 {
+            for j in 0..7 {
+                let constraint_name = match self.grid[j][i]{
+                   None => String::from("Free"),
+                   Some(constraint_id) => constraint_store
+                       .get_constraint(constraint_id)
+                       .expect("Unexpected logic error when exporting to csv. Could not find constraint in constraint store")
+                       .name
+                       .clone()
+                };
+                csv_writer.write_field(constraint_name)?;
+            }
+            csv_writer.write_record(None::<&[u8]>)?;
+        }
+
+        csv_writer.flush()?;
+
+        Ok(())
     }
 }

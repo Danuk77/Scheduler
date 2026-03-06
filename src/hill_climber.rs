@@ -18,7 +18,6 @@ use make_small_change::evolve_schedule;
 /// * Schedule - The output of the optimisation algorithm
 pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> Schedule {
     let mut schedule = generate_naive_schedule(&constraints);
-    println!("{:#?}", schedule);
     let (mut penalties, mut total_penalty) = calculate_penalties(constraints, &schedule);
 
     let mut best_schedule = schedule.clone();

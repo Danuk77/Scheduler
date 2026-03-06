@@ -52,7 +52,10 @@ fn main() -> Result<()> {
     );
 
     println!("Running hill climber algorithm");
-    run_hill_climber(&mut constraints, 1);
+    let schedule = run_hill_climber(&mut constraints, 1);
+    schedule
+        .export_to_csv(String::from("schedule.csv"), &constraints)
+        .expect("Could not export to csv");
     println!("Finished hill climber");
 
     Ok(())
