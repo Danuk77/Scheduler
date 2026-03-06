@@ -67,7 +67,12 @@ fn handle_scheduled_constraint(
                 .unschedule_constraint(constraint_id, constraint_duration)
                 .expect("Unexpected logic error");
             schedule.schedule_constraint(constraint_id, constraint_duration, &slot);
-            return Some(ChangeType::Move(previous_slot, slot.clone()));
+            return Some(ChangeType::Move(
+                constraint_id,
+                previous_slot,
+                slot.clone(),
+                constraint_duration,
+            ));
         }
         None => {
             println!("Cannot optimise constraint (scheuled)");
@@ -125,7 +130,7 @@ fn handle_unscheduled_constraint(
         schedule.get_slot_for_constraint(constraint_duration, &allowed_slots_for_constraint)
     {
         schedule.schedule_constraint(constraint_id, constraint_duration, &slot);
-        return Some(ChangeType::Scheduled(constraint_id));
+        return Some(ChangeType::Scheduled(constraint_id, constraint_duration));
     }
 
     if let Some(swappable_constraint) = constraint_store.find_swappable_scheduled_constraint(
@@ -138,8 +143,8 @@ fn handle_unscheduled_constraint(
             .expect("Unexpected error ocurred whilst unscheduling constraint");
         schedule.schedule_constraint(constraint_id, constraint_duration, &freed_slot);
         return Some(ChangeType::Subtituted(
-            constraint_id,
-            swappable_constraint.id,
+            (constraint_id, constraint_duration),
+            (swappable_constraint.id, swappable_constraint.duration),
         ));
     }
 

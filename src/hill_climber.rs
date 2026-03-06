@@ -23,19 +23,28 @@ pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> S
     let mut best_schedule = schedule.clone();
     let mut best_total_penalty = total_penalty;
 
-    for _ in 0..iterations {
-        let change = evolve_schedule(constraints, &penalties, &mut schedule);
-        let (new_penalties, new_total_penalty) = calculate_penalties(constraints, &schedule);
+    for iteration in 0..iterations {
+        println!("Running iteration number {:?}", iteration);
+        if let Some(change) = evolve_schedule(constraints, &penalties, &mut schedule) {
+            let (new_penalties, new_total_penalty) = calculate_penalties(constraints, &schedule);
+            println!("Evaluated penalty. Penalty: {:?}", new_total_penalty);
 
-        if new_total_penalty <= total_penalty {
-            total_penalty = new_total_penalty;
-            penalties = new_penalties;
-            if total_penalty <= best_total_penalty {
-                best_total_penalty = total_penalty;
-                best_schedule = schedule.clone();
+            if new_total_penalty <= total_penalty {
+                total_penalty = new_total_penalty;
+                penalties = new_penalties;
+                if total_penalty <= best_total_penalty {
+                    best_total_penalty = total_penalty;
+                    best_schedule = schedule.clone();
+                }
+            } else {
+                println!("New penalty is worse than existing best penalty. Reverting");
+                change.revert_change(&mut schedule);
             }
         } else {
-            // TODO: revert the change back into the old schedule
+            println!(
+                "Did not find optimisation schedule at iteration {:?}",
+                iteration
+            );
         }
     }
 

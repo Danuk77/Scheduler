@@ -72,7 +72,7 @@ impl ConstraintStore {
     }
 
     pub fn get_constraint(&self, constraint_id: u32) -> Option<&Constraint> {
-        return self.constraints.iter().find(|c| c.id == constraint_id);
+        self.constraints.iter().find(|c| c.id == constraint_id)
     }
 }
 
