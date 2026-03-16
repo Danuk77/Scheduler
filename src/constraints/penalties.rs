@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     constraints::{Constraint, constraint_store::ConstraintStore},
-    schedule::Schedule,
+    schedule::{Schedule, Slot},
 };
 
 /// Calculates the penalties for a set of constraints under a certain schedule
@@ -25,7 +25,7 @@ pub fn calculate_penalties(
     let mut total_penalty = 0;
 
     for constraint in constraints.into_iter() {
-        let constraint_penalty = constraint.calculate_penalty(schedule);
+        let constraint_penalty = constraint.calculate_penalty(schedule, constraints);
         penalties.insert(constraint.id, constraint_penalty);
         total_penalty += constraint_penalty;
     }
@@ -121,7 +121,67 @@ pub fn calculate_preferred_slots_based_penalty(
     0
 }
 
-// TODO: Implement
-//pub fn calculate_gap_based_penalty(constraint: &Constraint) -> u32 {
-//    0
-//}
+/// Calculates the penalty incurred if the minimum gap requirement between
+/// constraints of the same type is violated.
+///
+///
+/// # Arguments
+/// * `constraint` - The current constraint being evaluated.
+/// * `schedule` - The current state of the schedule, used to check where other constraints are placed.
+/// * `constraint_store` - The repository of all constraints, used to find others of the same type.
+///
+/// # Returns
+/// * `3` - If a gap violation is found with any other scheduled constraint of the same type.
+/// * `0` - If no violations are found or no other constraints of the same type are scheduled.
+///
+/// # Panics
+/// * Panics if the `constraint` does not have a defined `gap` value.
+/// * Panics if a matching constraint is marked as scheduled but its slot cannot be retrieved.
+pub fn calculate_gap_based_penalty(
+    constraint: &Constraint,
+    schedule: &Schedule,
+    constraint_store: &ConstraintStore,
+) -> u32 {
+    // NOTE: If the constraint is not scheduled then we do not calculate the gap based penalty
+    if !schedule.is_constraint_scheduled(constraint.id) {
+        return 0;
+    }
+
+    let same_type_constraints = constraint_store.get_constraint_ids_of_type(&constraint.name);
+
+    for constraint_id in same_type_constraints {
+        if !schedule.is_constraint_scheduled(constraint_id) || constraint_id == constraint.id {
+            continue;
+        }
+
+        let gap = calculate_gap_between_slots(
+            schedule
+                .get_scheduled_slot_for_constraint(constraint_id)
+                .unwrap(),
+            schedule
+                .get_scheduled_slot_for_constraint(constraint.id)
+                .unwrap(),
+        );
+
+        if gap < constraint.gap.expect("Unexpected call calculating gap based penalty when no gap was specified for constraint") {
+            return 3;
+        }
+    }
+
+    0
+}
+
+/// Calculates the number of slots between the specified two slots
+///
+/// # Arguments
+/// * `slot_one` - The first slot
+/// * `slot_two` - The second slot
+///
+/// # Returns
+/// * `u16` - The total number of slots between the two slots
+fn calculate_gap_between_slots(slot_one: &Slot, slot_two: &Slot) -> u16 {
+    let day_gap = slot_one.day as i16 - slot_two.day as i16;
+    let window_gap = slot_one.window as i16 - slot_two.window as i16;
+
+    ((day_gap * 48) + window_gap).unsigned_abs()
+}

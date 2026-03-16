@@ -1,10 +1,15 @@
-use std::collections::HashMap;
-
 use crate::{
     constraints::constraint_store::ConstraintStore,
     hill_climber::change_types::ChangeType,
     schedule::{Schedule, Slot},
 };
+use std::collections::HashMap;
+
+/// Structure used for passing allowed slots and preferred slots as one
+pub struct SchedulableSlots {
+    pub allowed_slots: Option<Vec<Slot>>,
+    pub preferred_slots: Option<Vec<Slot>>,
+}
 
 ///  Runs a single iteration of the hill climbing optimisation algorithm
 ///
@@ -22,22 +27,28 @@ pub fn evolve_schedule(
     schedule: &mut Schedule,
 ) -> Option<ChangeType> {
     let constraint = constraints.get_constraint_for_optimisation(incurred_penalties)?;
+
+    println!("Constraint {:?} choosen for optimisation", constraint.name);
     let constraint_id = constraint.id;
     let constraint_duration = constraint.duration;
-    let allowed_slots = constraint.allowed_slots.clone();
+    let schedulabe_slots_for_constraint = SchedulableSlots {
+        allowed_slots: constraint.allowed_slots.clone(),
+        preferred_slots: constraint.preferred_slots.clone(),
+    };
 
     if schedule.is_constraint_scheduled(constraint_id) {
         return handle_scheduled_constraint(
             constraint_id,
             constraint_duration,
-            allowed_slots,
+            schedulabe_slots_for_constraint,
             schedule,
+            constraints,
         );
     } else {
         return handle_unscheduled_constraint(
             constraint_id,
             constraint_duration,
-            allowed_slots,
+            schedulabe_slots_for_constraint,
             schedule,
             constraints,
         );
@@ -56,10 +67,12 @@ pub fn evolve_schedule(
 fn handle_scheduled_constraint(
     constraint_id: u32,
     constraint_duration: u8,
-    allowed_slots: Option<Vec<Slot>>,
+    schedulable_slots: SchedulableSlots,
     schedule: &mut Schedule,
+    constraint_store: &ConstraintStore,
 ) -> Option<ChangeType> {
-    let alternative_slot = find_alternative_slot(constraint_duration, allowed_slots, schedule);
+    let alternative_slot =
+        schedule.get_slot_for_constraint(constraint_duration, &schedulable_slots);
 
     match alternative_slot {
         Some(slot) => {
@@ -74,36 +87,22 @@ fn handle_scheduled_constraint(
             ));
         }
         None => {
-            println!("Cannot optimise constraint (scheuled)");
+            if let Some(swappable_constraint) = constraint_store
+                .find_swappable_scheduled_constraint(constraint_id, constraint_duration, schedule)
+            {
+                let freed_slot = schedule
+                    .unschedule_constraint(swappable_constraint.id, swappable_constraint.duration)
+                    .expect("Unexpected error ocurred whilst unscheduling constraint");
+                schedule.schedule_constraint(constraint_id, constraint_duration, &freed_slot);
+                return Some(ChangeType::Substituted(
+                    (constraint_id, constraint_duration),
+                    (swappable_constraint.id, swappable_constraint.duration),
+                ));
+            }
+            println!("Cannot optimise constraint (scheduled)");
             None
         }
     }
-}
-
-/// Finds an empty slot for a constraint from the schedule
-///
-/// # Arguments
-/// * constraint_duration - The duration of the constraint to find a slot for
-/// * allowed_slots - The slots the constraint is allowed to be scheduled in
-/// * schedule - The current state of the schedule
-///
-/// # Returns
-/// Slot - If slot is found
-/// None - If no free slot exists for constraint
-fn find_alternative_slot(
-    constraint_duration: u8,
-    allowed_slots: Option<Vec<Slot>>,
-    schedule: &Schedule,
-) -> Option<Slot> {
-    // TODO: We can add some randomness into the order in the allowed slots are considered
-    if let Some(slots) = allowed_slots {
-        return slots
-            .iter()
-            .find(|slot| schedule.is_duration_free(&slot, constraint_duration))
-            .cloned();
-    }
-
-    return schedule.get_slot_for_constraint(constraint_duration, &allowed_slots);
 }
 
 /// Function called when trying to optimise a constraint that is not yet scheduled
@@ -121,13 +120,11 @@ fn find_alternative_slot(
 fn handle_unscheduled_constraint(
     constraint_id: u32,
     constraint_duration: u8,
-    allowed_slots_for_constraint: Option<Vec<Slot>>,
+    schedulable_slots: SchedulableSlots,
     schedule: &mut Schedule,
     constraint_store: &ConstraintStore,
 ) -> Option<ChangeType> {
-    if let Some(slot) =
-        schedule.get_slot_for_constraint(constraint_duration, &allowed_slots_for_constraint)
-    {
+    if let Some(slot) = schedule.get_slot_for_constraint(constraint_duration, &schedulable_slots) {
         schedule.schedule_constraint(constraint_id, constraint_duration, &slot);
         return Some(ChangeType::Scheduled(constraint_id, constraint_duration));
     }

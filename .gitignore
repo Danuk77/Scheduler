@@ -1,1 +1,7 @@
 /target
+
+# Constraint store configurations
+constraints.json
+
+# Generated schedules
+schedule.csv

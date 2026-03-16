@@ -1,8 +1,11 @@
+use serde::{Deserialize, Serialize};
+
 use crate::{
     constraints::{
+        constraint_store::ConstraintStore,
         penalties::{
-            calculate_allowed_slots_based_penalty, calculate_preferred_slots_based_penalty,
-            calculate_presence_based_penalty,
+            calculate_allowed_slots_based_penalty, calculate_gap_based_penalty,
+            calculate_preferred_slots_based_penalty, calculate_presence_based_penalty,
         },
         penalty::Penalty,
     },
@@ -14,7 +17,7 @@ pub mod constraint_store;
 pub mod penalties;
 pub mod penalty;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum ConstraintPriority {
     High,
     Low,
@@ -35,14 +38,14 @@ pub enum ConstraintPriority {
 /// * `preferred_slots` - Optional list of preferred time slots as (day, slot) tuples (Only the
 /// start slot is specified)
 /// * `scheduled_slot` - The currently assigned time slot, if scheduled
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Constraint {
     pub name: String,
     pub id: u32,
     pub penalties: Vec<Penalty>,
     pub priority: ConstraintPriority,
     pub duration: u8,
-    pub gap: Option<u8>,
+    pub gap: Option<u16>,
     pub allowed_slots: Option<Vec<Slot>>,
     pub preferred_slots: Option<Vec<Slot>>,
 }
@@ -52,7 +55,11 @@ impl Constraint {
     ///
     /// # Returs
     /// The calculated penalty
-    pub fn calculate_penalty(&self, schedule: &Schedule) -> u32 {
+    pub fn calculate_penalty(
+        &self,
+        schedule: &Schedule,
+        constraint_store: &ConstraintStore,
+    ) -> u32 {
         let mut total_penalty: u32 = 0;
 
         for penalty in &self.penalties {
@@ -66,8 +73,9 @@ impl Constraint {
                 Penalty::PreferredSlots => {
                     total_penalty += calculate_preferred_slots_based_penalty(self, schedule)
                 }
-                // TODO: Implement
-                Penalty::Gap => total_penalty += 0, //calculate_gap_based_penalty(self),
+                Penalty::Gap => {
+                    total_penalty += calculate_gap_based_penalty(self, schedule, constraint_store)
+                }
             }
         }
 

@@ -3,6 +3,7 @@ pub mod make_small_change;
 
 use crate::{
     constraints::{constraint_store::ConstraintStore, penalties::calculate_penalties},
+    hill_climber::make_small_change::SchedulableSlots,
     schedule::Schedule,
 };
 use make_small_change::evolve_schedule;
@@ -67,7 +68,13 @@ pub fn generate_naive_schedule(constraints: &ConstraintStore) -> Schedule {
     // iterator should do that anyways)
     for constraint in constraints {
         schedule
-            .get_slot_for_constraint(constraint.duration, &constraint.allowed_slots)
+            .get_slot_for_constraint(
+                constraint.duration,
+                &SchedulableSlots {
+                    allowed_slots: constraint.allowed_slots.clone(),
+                    preferred_slots: constraint.preferred_slots.clone(),
+                },
+            )
             .and_then(|slot| {
                 Some(schedule.schedule_constraint(constraint.id, constraint.duration, &slot))
             });

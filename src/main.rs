@@ -1,58 +1,22 @@
-use crate::{constraints::constraint_store::ConstraintStore, hill_climber::run_hill_climber};
+use crate::{
+    constraints::constraint_store::{ConstraintStore, load_constraint_store_from_file},
+    hill_climber::run_hill_climber,
+};
 
 mod constraints;
 mod hill_climber;
 mod schedule;
 
 use anyhow::Result;
-use constraints::constraint_builder::ConstraintBuilder;
 
 fn main() -> Result<()> {
     println!("Initialising constraint store");
-    let mut constraints: ConstraintStore = ConstraintStore::new();
-
-    let mut builder = ConstraintBuilder::new();
-    constraints.push(
-        builder
-            .set_id(1)
-            .set_name("a".to_string())
-            .set_priority(constraints::ConstraintPriority::High)
-            .set_duration(4)
-            .build()?,
-    );
-
-    builder = ConstraintBuilder::new();
-    constraints.push(
-        builder
-            .set_id(2)
-            .set_name("b".to_string())
-            .set_priority(constraints::ConstraintPriority::High)
-            .set_duration(4)
-            .build()?,
-    );
-
-    builder = ConstraintBuilder::new();
-    constraints.push(
-        builder
-            .set_id(3)
-            .set_name("c".to_string())
-            .set_priority(constraints::ConstraintPriority::High)
-            .set_duration(16)
-            .build()?,
-    );
-
-    builder = ConstraintBuilder::new();
-    constraints.push(
-        builder
-            .set_id(4)
-            .set_name("d".to_string())
-            .set_priority(constraints::ConstraintPriority::High)
-            .set_duration(32)
-            .build()?,
-    );
+    let mut constraints: ConstraintStore =
+        load_constraint_store_from_file("constraints".to_string())
+            .expect("Could not load constraints from file. Please ensure the file exists");
 
     println!("Running hill climber algorithm");
-    let schedule = run_hill_climber(&mut constraints, 1);
+    let schedule = run_hill_climber(&mut constraints, 100000);
     schedule
         .export_to_csv(String::from("schedule.csv"), &constraints)
         .expect("Could not export to csv");

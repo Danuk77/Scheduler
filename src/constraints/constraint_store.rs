@@ -1,15 +1,18 @@
 use std::collections::HashMap;
+use std::error::Error;
 use std::fmt;
+use std::fs::File;
 
 use crate::{constraints::Constraint, schedule::Schedule};
 use rand::prelude::*;
 use rand::rng;
+use serde::Deserialize;
+use serde::Serialize;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 /// Structure used for storing arbitrary constraints for optimisation
 pub struct ConstraintStore {
     constraints: Vec<Constraint>,
-    rng: ThreadRng,
 }
 
 impl ConstraintStore {
@@ -17,19 +20,18 @@ impl ConstraintStore {
     pub fn new() -> Self {
         return ConstraintStore {
             constraints: Vec::new(),
-            rng: rng(),
         };
     }
 
     /// Add a new constraint to the store
     ///
     /// # Arguments
-    /// * `constraint` - The constraint to store
+    /// * `constraints` - The constraints to store
     ///
     /// # Returns
     /// None
-    pub fn push(&mut self, constraint: Constraint) {
-        self.constraints.push(constraint);
+    pub fn push(&mut self, constraints: &mut Vec<Constraint>) {
+        self.constraints.append(constraints);
     }
 
     /// Retrieves a constraint for optimisation from the store
@@ -47,13 +49,26 @@ impl ConstraintStore {
         penalties: &HashMap<u32, u32>,
     ) -> Option<&Constraint> {
         self.constraints
-            .choose_weighted(&mut self.rng, |c| {
+            .choose_weighted(&mut rng(), |c| {
                 *penalties.get(&c.id)
                     .expect("Error: encountered inconsistent constraint ids between penalty calculation and constraint store")
             })
             .ok()
     }
 
+    /// Finds a stored scheduled constraint that is compatible to be swapped with a given duration
+    ///
+    /// A higher chance is given to constraints with smaller duration to be selected if they are
+    /// compatible to be swapped
+    ///
+    /// # Arguments
+    /// * `constraint_id` - The id of the constraint for which we want to find a swappable constraint
+    /// * `constraint_duration` - The duration of the constraint represented by `constraint_id`
+    /// * `schedule` - The schedule
+    ///
+    /// # Returns
+    /// * `&Constraint` - A constraint that is compatible to be swapped with
+    /// * `None` - If no such constraint exist
     pub fn find_swappable_scheduled_constraint(
         &self,
         constraint_id: u32,
@@ -64,16 +79,73 @@ impl ConstraintStore {
             .constraints
             .iter()
             .filter(|c| {
-                (c.id != constraint_id && c.duration >= constraint_duration)
+                c.id != constraint_id
                     && schedule.is_constraint_scheduled(c.id)
+                    && schedule.is_duration_free_or_owned_by(
+                        &c.id,
+                        constraint_duration,
+                        schedule.get_scheduled_slot_for_constraint(c.id).unwrap(),
+                    )
             })
             .collect();
 
-        compatible_constriants.choose(&mut rng()).copied()
+        if compatible_constriants.is_empty() {
+            return None;
+        }
+
+        Some(
+            compatible_constriants
+                .choose_weighted(&mut rng(), |c| {
+                    if c.duration == 0 {
+                        0.0
+                    } else {
+                        1.0 / c.duration as f32
+                    }
+                })
+                .copied()
+                .unwrap(),
+        )
     }
 
+    /// Retrives the stored constraint given its id
+    ///
+    /// # Arguments
+    /// * `constraint_id` - The id of the constraint to fetch
+    ///
+    /// # Returns
+    /// * `Constraint` - If a constraint with the specified id exist in the store
+    /// * None - If no such constraint exists
     pub fn get_constraint(&self, constraint_id: u32) -> Option<&Constraint> {
         self.constraints.iter().find(|c| c.id == constraint_id)
+    }
+
+    /// Retrieves a list of stored constraint ids for a given `Constraint type`
+    ///
+    /// `Constraint type` is specified by the constraint's name
+    ///
+    /// # Arguments
+    /// * `constraint_type` - The type of constraint (name)
+    ///
+    /// # Returns
+    ///
+    /// * `Vec<u32>` - A vector containing the list of ids for the specified type
+    pub fn get_constraint_ids_of_type(&self, constraint_type: &String) -> Vec<u32> {
+        self.constraints
+            .iter()
+            .filter(|c| c.name == *constraint_type)
+            .map(|c| c.id)
+            .collect()
+    }
+
+    /// Exports the constraints to a json file
+    ///
+    /// # Arguments
+    /// * `file_name` - The name of the toml file containing the constraints
+    pub fn export_constraints(&self, file_name: String) -> Result<(), Box<dyn Error>> {
+        let json_string = serde_json::to_string_pretty(&self)?;
+        std::fs::write(format!("{}.json", file_name), json_string)?;
+
+        Ok(())
     }
 }
 
@@ -99,4 +171,21 @@ impl fmt::Debug for ConstraintStore {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_list().entries(&self.constraints).finish()
     }
+}
+
+/// Reads stored constraint store configuration from json file, deserializes the constraints and
+/// returns the store
+///
+/// # Arguments
+/// * `file_name` - The name of the json file containing the serialized constraints store (excludes
+/// the .json suffix)
+///
+/// # Returns
+/// * `ConstraintStore` - The deserialized constraint store
+/// * `io::Error` - If failed to open file with the given name
+/// * `Error` - If cannot deserialize the contents of the json file into a constraint store
+pub fn load_constraint_store_from_file(file_name: String) -> Result<ConstraintStore, Box<dyn Error>> {
+    let json_reader = File::open(format!("{}.json", file_name))?;
+    let constraints: ConstraintStore = serde_json::from_reader(json_reader)?;
+    Ok(constraints)
 }

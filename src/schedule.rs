@@ -1,15 +1,18 @@
 pub mod errors;
 
 use csv::Writer;
-use serde::Serialize;
+use rand::rng;
+use rand::seq::IteratorRandom;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
 use std::{array, usize};
 
 use crate::constraints::constraint_store::ConstraintStore;
+use crate::hill_climber::make_small_change::SchedulableSlots;
 use crate::schedule::errors::ScheduleError;
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct Slot {
     pub day: u8,
     pub window: u8,
@@ -32,6 +35,9 @@ impl Schedule {
     }
 
     /// Finds a slot compatible to schedule a constraint
+    ///
+    /// /// TODO: Add a way to make allowed slots and preferred slots work togeather,
+    /// make it so that if an allowed slot is also preferred, it has higher presidence to be chosen
     /// # Arguments
     /// * constraint_duration - The duration of the constraint to find a slot
     /// * allowed_slots - The slots the constraint is allowed to be in
@@ -42,19 +48,30 @@ impl Schedule {
     pub fn get_slot_for_constraint(
         &self,
         constraint_duration: u8,
-        allowed_slots: &Option<Vec<Slot>>,
+        schedulable_slots: &SchedulableSlots,
     ) -> Option<Slot> {
-        if let Some(slots) = allowed_slots {
+        if let Some(slots) = &schedulable_slots.allowed_slots {
             return slots
                 .iter()
-                .find(|slot| self.is_duration_free(slot, constraint_duration))
+                .filter(|slot| self.is_duration_free(slot, constraint_duration))
+                .choose(&mut rng())
                 .map(|free_slot| Slot {
                     day: free_slot.day,
                     window: free_slot.window,
                 });
-        } else {
-            return self.find_free_slot(constraint_duration);
         }
+
+        if let Some(slots) = &schedulable_slots.preferred_slots {
+            if let Some(preferred_slot) = slots
+                .iter()
+                .filter(|slot| self.is_duration_free(slot, constraint_duration))
+                .choose(&mut rng())
+            {
+                return Some(preferred_slot.clone());
+            }
+        }
+
+        return self.find_free_slot(constraint_duration);
     }
 
     fn find_free_slot(&self, constraint_duration: u8) -> Option<Slot> {
