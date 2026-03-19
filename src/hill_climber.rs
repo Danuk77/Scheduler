@@ -7,6 +7,7 @@ use crate::{
     schedule::Schedule,
 };
 use make_small_change::evolve_schedule;
+use rand::random;
 
 /// Runs hill climbing optimisation algorithm to generate a schedule to satisfied specified
 /// constraints
@@ -17,7 +18,11 @@ use make_small_change::evolve_schedule;
 ///
 /// # Returns
 /// * Schedule - The output of the optimisation algorithm
+///
+/// TODO: Implement temperature for accepting bad changes
 pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> Schedule {
+    let mut temperature: f32 = 1000.0;
+    let cooling_factor = 0.995;
     let mut schedule = generate_naive_schedule(&constraints);
     let (mut penalties, mut total_penalty) = calculate_penalties(constraints, &schedule);
 
@@ -33,14 +38,24 @@ pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> S
             if new_total_penalty <= total_penalty {
                 total_penalty = new_total_penalty;
                 penalties = new_penalties;
+
                 if total_penalty <= best_total_penalty {
                     best_total_penalty = total_penalty;
                     best_schedule = schedule.clone();
                 }
             } else {
-                println!("New penalty is worse than existing best penalty. Reverting");
-                change.revert_change(&mut schedule);
+                println!("New penalty is worse than existing best penalty");
+                let delta_penalty: f32 = new_total_penalty as f32 - total_penalty as f32;
+                if (-delta_penalty / temperature).exp() > random() {
+                    println!("Accepting worse schedule");
+                    total_penalty = new_total_penalty;
+                    penalties = new_penalties;
+                } else {
+                    println!("Reverting");
+                    change.revert_change(&mut schedule);
+                }
             }
+            temperature *= cooling_factor;
         } else {
             println!(
                 "Did not find optimisation schedule at iteration {:?}",
@@ -49,6 +64,10 @@ pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> S
         }
     }
 
+    println!(
+        "Finished hill climeber optimisation algorithm. Best penalty acheived {}",
+        best_total_penalty
+    );
     best_schedule
 }
 

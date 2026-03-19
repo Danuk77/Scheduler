@@ -55,10 +55,7 @@ impl Schedule {
                 .iter()
                 .filter(|slot| self.is_duration_free(slot, constraint_duration))
                 .choose(&mut rng())
-                .map(|free_slot| Slot {
-                    day: free_slot.day,
-                    window: free_slot.window,
-                });
+                .cloned();
         }
 
         if let Some(slots) = &schedulable_slots.preferred_slots {

@@ -50,8 +50,10 @@ impl ConstraintStore {
     ) -> Option<&Constraint> {
         self.constraints
             .choose_weighted(&mut rng(), |c| {
-                *penalties.get(&c.id)
-                    .expect("Error: encountered inconsistent constraint ids between penalty calculation and constraint store")
+                // NOTE: A base peanlty of 5 is added to each constraint to ensure even the
+                // constraints that are incurring no penalty has a chance to be mutated
+                (*penalties.get(&c.id)
+                    .expect("Error: encountered inconsistent constraint ids between penalty calculation and constraint store")) + 5
             })
             .ok()
     }
@@ -184,7 +186,9 @@ impl fmt::Debug for ConstraintStore {
 /// * `ConstraintStore` - The deserialized constraint store
 /// * `io::Error` - If failed to open file with the given name
 /// * `Error` - If cannot deserialize the contents of the json file into a constraint store
-pub fn load_constraint_store_from_file(file_name: String) -> Result<ConstraintStore, Box<dyn Error>> {
+pub fn load_constraint_store_from_file(
+    file_name: String,
+) -> Result<ConstraintStore, Box<dyn Error>> {
     let json_reader = File::open(format!("{}.json", file_name))?;
     let constraints: ConstraintStore = serde_json::from_reader(json_reader)?;
     Ok(constraints)
