@@ -18,12 +18,11 @@ use rand::random;
 ///
 /// # Returns
 /// * Schedule - The output of the optimisation algorithm
-///
-/// TODO: Implement temperature for accepting bad changes
-pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> Schedule {
-    let mut temperature: f32 = 1000.0;
+pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> (Schedule, u32) {
+    let mut temperature: f32 = 40.0;
     let cooling_factor = 0.995;
-    let mut schedule = generate_naive_schedule(&constraints);
+    //let mut schedule = generate_naive_schedule(&constraints);
+    let mut schedule = Schedule::new();
     let (mut penalties, mut total_penalty) = calculate_penalties(constraints, &schedule);
 
     let mut best_schedule = schedule.clone();
@@ -68,7 +67,7 @@ pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> S
         "Finished hill climeber optimisation algorithm. Best penalty acheived {}",
         best_total_penalty
     );
-    best_schedule
+    (best_schedule,best_total_penalty)
 }
 
 /// Generate a naive schedule as the starting point for the optimisation algorithm

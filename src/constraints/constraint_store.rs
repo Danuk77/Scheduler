@@ -149,6 +149,55 @@ impl ConstraintStore {
 
         Ok(())
     }
+
+    /// Prints metrics for the stored constraints under a specific schedule
+    ///
+    /// Metrics include,
+    /// * Number/Names of scheduled constraints
+    /// * Number/Names of non-scheduled constraints
+    ///
+    /// # Arguments
+    /// * `schedule` - The schedule the constraints are scheduled under
+    pub fn print_schedule_report(&self, schedule: &Schedule, total_incurred_penalty: u32) {
+        let (scheduled, non_scheduled): (Vec<_>, Vec<_>) = self
+            .constraints
+            .iter()
+            .partition(|c| schedule.is_constraint_scheduled(c.id));
+
+        let total_constraints = self.constraints.len();
+        let coverage =
+            scheduled.len() as f32 / (scheduled.len() as f32 + non_scheduled.len() as f32) * 100.0;
+
+        println!("\n{}", "=".repeat(40));
+        println!("{:^40}", "SCHEDULE REPORT");
+        println!("{}", "=".repeat(40));
+
+        // Summary Statistics
+        println!("{:<25} {:>14}", "Total Constraints:", total_constraints);
+        println!("{:<25} {:>14}", "Successfully Scheduled:", scheduled.len());
+        println!(
+            "{:<25} {:>14}",
+            "Non scheduled (Gaps):",
+            non_scheduled.len()
+        );
+        println!("{:<25} {:>13.1}%", "Schedule Fulfillment:", coverage);
+        println!("{:<25} {:>14}", "Total incurred penalty:", total_incurred_penalty);
+
+        println!("\n{}", "=".repeat(40));
+        println!("Scheduled constraints");
+        println!("{}", "=".repeat(40));
+        scheduled
+            .iter()
+            .for_each(|c| println!("constraint_type: {}, id: {}", c.name, c.id));
+
+        println!("\n{}", "=".repeat(40));
+        println!("Non scheduled constraints");
+        println!("{}", "=".repeat(40));
+        non_scheduled
+            .iter()
+            .for_each(|c| println!("constraint_type: {}, id: {}", c.name, c.id));
+        println!("{}", "-".repeat(40));
+    }
 }
 
 impl<'a> IntoIterator for &'a mut ConstraintStore {
