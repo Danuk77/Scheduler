@@ -25,7 +25,7 @@ pub fn evolve_schedule(
     constraints: &mut ConstraintStore,
     incurred_penalties: &HashMap<u32, u32>,
     schedule: &mut Schedule,
-) -> Option<ChangeType> {
+) -> Option<Vec<ChangeType>> {
     let constraint = constraints.get_constraint_for_optimisation(incurred_penalties)?;
 
     println!("Constraint {:?} choosen for optimisation", constraint.name);
@@ -62,7 +62,7 @@ pub fn evolve_schedule(
 /// * schedule - The current state of the schedule
 ///
 /// # Returns
-/// * ChangeType - The type of optimisation performed
+/// * Vec<ChangeType> - A vector containing all the changes performed (in order)
 /// * None - If no optimisation was performed
 fn handle_scheduled_constraint(
     constraint_id: u32,
@@ -70,7 +70,8 @@ fn handle_scheduled_constraint(
     schedulable_slots: SchedulableSlots,
     schedule: &mut Schedule,
     constraint_store: &ConstraintStore,
-) -> Option<ChangeType> {
+) -> Option<Vec<ChangeType>> {
+    let mut changes_made: Vec<ChangeType> = Vec::new();
     let alternative_slot =
         schedule.get_slot_for_constraint(constraint_duration, &schedulable_slots);
 
@@ -79,12 +80,16 @@ fn handle_scheduled_constraint(
             let previous_slot = schedule
                 .unschedule_constraint(constraint_id, constraint_duration)
                 .expect("Unexpected logic error");
-            schedule.schedule_constraint(constraint_id, constraint_duration, &slot);
-            return Some(ChangeType::Move(
+            changes_made.push(ChangeType::Unscheduled(
                 constraint_id,
-                previous_slot,
                 constraint_duration,
+                previous_slot,
             ));
+
+            schedule.schedule_constraint(constraint_id, constraint_duration, &slot);
+            changes_made.push(ChangeType::Scheduled(constraint_id, constraint_duration));
+
+            return Some(changes_made);
         }
         None => {
             if let Some(swappable_constraint) = constraint_store
@@ -93,11 +98,15 @@ fn handle_scheduled_constraint(
                 let freed_slot = schedule
                     .unschedule_constraint(swappable_constraint.id, swappable_constraint.duration)
                     .expect("Unexpected error ocurred whilst unscheduling constraint");
-                schedule.schedule_constraint(constraint_id, constraint_duration, &freed_slot);
-                return Some(ChangeType::Substituted(
-                    (constraint_id, constraint_duration),
-                    (swappable_constraint.id, swappable_constraint.duration),
+                changes_made.push(ChangeType::Unscheduled(
+                    swappable_constraint.id,
+                    swappable_constraint.duration,
+                    freed_slot.clone(),
                 ));
+
+                schedule.schedule_constraint(constraint_id, constraint_duration, &freed_slot);
+                changes_made.push(ChangeType::Scheduled(constraint_id, constraint_duration));
+                return Some(changes_made);
             }
             println!("Cannot optimise constraint (scheduled)");
             None
@@ -115,7 +124,7 @@ fn handle_scheduled_constraint(
 /// * constraint_store - The store containing all constraints
 ///
 /// # Returns
-/// * ChangeType - The type of optimisation performed
+/// * Vec<ChangeType> - A vector containing all the changes performed (in order)
 /// * None - If no optimisation was performed
 fn handle_unscheduled_constraint(
     constraint_id: u32,
@@ -123,10 +132,12 @@ fn handle_unscheduled_constraint(
     schedulable_slots: SchedulableSlots,
     schedule: &mut Schedule,
     constraint_store: &ConstraintStore,
-) -> Option<ChangeType> {
+) -> Option<Vec<ChangeType>> {
+    let mut changes_made: Vec<ChangeType> = Vec::new();
+
     if let Some(slot) = schedule.get_slot_for_constraint(constraint_duration, &schedulable_slots) {
         schedule.schedule_constraint(constraint_id, constraint_duration, &slot);
-        return Some(ChangeType::Scheduled(constraint_id, constraint_duration));
+        return vec![ChangeType::Scheduled(constraint_id, constraint_duration)].into();
     }
 
     if let Some(swappable_constraint) = constraint_store.find_swappable_scheduled_constraint(
@@ -137,12 +148,21 @@ fn handle_unscheduled_constraint(
         let freed_slot = schedule
             .unschedule_constraint(swappable_constraint.id, swappable_constraint.duration)
             .expect("Unexpected error ocurred whilst unscheduling constraint");
-        schedule.schedule_constraint(constraint_id, constraint_duration, &freed_slot);
-        return Some(ChangeType::Substituted(
-            (constraint_id, constraint_duration),
-            (swappable_constraint.id, swappable_constraint.duration),
+        changes_made.push(ChangeType::Unscheduled(
+            swappable_constraint.id,
+            swappable_constraint.duration,
+            freed_slot.clone(),
         ));
+
+        schedule.schedule_constraint(constraint_id, constraint_duration, &freed_slot);
+        changes_made.push(ChangeType::Scheduled(constraint_id, constraint_duration));
+        return Some(changes_made);
     }
+
+    // TODO:
+    // 1. Randomly find a compatible starting slot for the constraint
+    // 2. Unschedule all constraints that are scheduled under that slot
+    // 3. Schedule in the new slot
 
     println!("Cannot optimise constraint (not scheduled)");
     None
