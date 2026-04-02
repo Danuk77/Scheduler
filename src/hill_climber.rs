@@ -51,6 +51,7 @@ pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> (
                     println!("Reverting");
                     changes
                         .iter()
+                        .rev()
                         .for_each(|change| change.revert_change(&mut schedule));
                 }
             }
@@ -62,10 +63,5 @@ pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> (
             );
         }
     }
-
-    println!(
-        "Finished hill climeber optimisation algorithm. Best penalty acheived {}",
-        best_total_penalty
-    );
     (best_schedule, best_total_penalty)
 }

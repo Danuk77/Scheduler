@@ -48,14 +48,14 @@ impl ConstraintStore {
         &mut self,
         penalties: &HashMap<u32, u32>,
     ) -> Option<&Constraint> {
-        self.constraints
-            .choose_weighted(&mut rng(), |c| {
-                // NOTE: A base peanlty of 5 is added to each constraint to ensure even the
-                // constraints that are incurring no penalty has a chance to be mutated
-                (*penalties.get(&c.id)
-                    .expect("Error: encountered inconsistent constraint ids between penalty calculation and constraint store")) + 5
-            })
-            .ok()
+        self.constraints.choose(&mut rng())
+        //.choose_weighted(&mut rng(), |c| {
+        //    // NOTE: A base peanlty of 5 is added to each constraint to ensure even the
+        //    // constraints that are incurring no penalty has a chance to be mutated
+        //    (penalties.get(&c.id)
+        //        .expect("Error: encountered inconsistent constraint ids between penalty calculation and constraint store")) + 5
+        //})
+        //.ok()
     }
 
     /// Finds a stored scheduled constraint that is compatible to be swapped with a given duration
@@ -95,18 +95,7 @@ impl ConstraintStore {
             return None;
         }
 
-        Some(
-            compatible_constriants
-                .choose_weighted(&mut rng(), |c| {
-                    if c.duration == 0 {
-                        0.0
-                    } else {
-                        1.0 / c.duration as f32
-                    }
-                })
-                .copied()
-                .unwrap(),
-        )
+        Some(compatible_constriants.choose(&mut rng()).unwrap())
     }
 
     /// Retrives the stored constraint given its id
@@ -181,7 +170,10 @@ impl ConstraintStore {
             non_scheduled.len()
         );
         println!("{:<25} {:>13.1}%", "Schedule Fulfillment:", coverage);
-        println!("{:<25} {:>14}", "Total incurred penalty:", total_incurred_penalty);
+        println!(
+            "{:<25} {:>14}",
+            "Total incurred penalty:", total_incurred_penalty
+        );
 
         println!("\n{}", "=".repeat(40));
         println!("Scheduled constraints");

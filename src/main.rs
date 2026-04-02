@@ -16,10 +16,11 @@ fn main() -> Result<()> {
             .expect("Could not load constraints from file. Please ensure the file exists");
 
     println!("Running hill climber algorithm");
-    let (schedule, total_incurred_penalty) = run_hill_climber(&mut constraints, 10000);
+    let (schedule, total_incurred_penalty) = run_hill_climber(&mut constraints, 100000);
     schedule
         .export_to_csv(String::from("schedule.csv"), &constraints)
         .expect("Could not export to csv");
+
     println!("Finished hill climber");
 
     constraints.print_schedule_report(&schedule, total_incurred_penalty);

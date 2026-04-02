@@ -8,7 +8,7 @@ pub enum ChangeType {
     /// A constraint was scheduled for a specific duration.
     ///
     /// Fields: `(constraint_id, duration)`
-    Scheduled(u32, u8),
+    Scheduled(u32),
 
     /// A constraint was unscheduled from a specific slot.
     ///
@@ -23,9 +23,9 @@ impl ChangeType {
     /// * `schedule` - A mutable reference to the [Schedule] to be modified.
     pub fn revert_change(&self, schedule: &mut Schedule) {
         match self {
-            ChangeType::Scheduled(constraint_id, constraint_duration) => {
+            ChangeType::Scheduled(constraint_id) => {
                 schedule
-                    .unschedule_constraint(*constraint_id, *constraint_duration)
+                    .unschedule_constraint(*constraint_id)
                     .expect("Unexpected logic error when unscheduling scheduled constraint");
             }
 

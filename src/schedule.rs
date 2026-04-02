@@ -1,10 +1,10 @@
 pub mod errors;
 
 use csv::Writer;
-use rand::rng;
 use rand::seq::IteratorRandom;
+use rand::{Rng, rng};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::{array, usize};
 
@@ -23,7 +23,7 @@ pub struct Schedule {
     #[serde(with = "serde_arrays")]
     pub grid: [[Option<u32>; 48]; 7], // Option<u32> stores the id of the constraint, or None if nothing is scheduled
     #[serde(skip_serializing)]
-    scheduled_constraints: HashMap<u32, Slot>,
+    scheduled_constraints: HashMap<u32, (Slot, u8)>, // K = constraint_id, V = (slot, scheduled_duration)
 }
 
 impl Schedule {
@@ -34,7 +34,7 @@ impl Schedule {
         }
     }
 
-    /// Finds a slot compatible to schedule a constraint
+    /// Finds a free compatible slot to schedule a constraint
     ///
     /// /// TODO: Add a way to make allowed slots and preferred slots work togeather,
     /// make it so that if an allowed slot is also preferred, it has higher presidence to be chosen
@@ -45,7 +45,7 @@ impl Schedule {
     /// # Returns
     /// * Slot - The slot representing the starting point to schedule the constraint to
     /// * None - If no slot exists for the specified duration
-    pub fn get_slot_for_constraint(
+    pub fn get_free_slot_for_constraint(
         &self,
         constraint_duration: u8,
         schedulable_slots: &SchedulableSlots,
@@ -94,6 +94,25 @@ impl Schedule {
         }
     }
 
+    /// Chooses a slot for the given constraint's schedulable slots (or any other slots) regardless of whether the slots
+    /// are free or not
+    ///
+    /// # Arguments
+    /// * `constraint_duration` - The duration of the constraint to choose a slot for
+    ///
+    /// # Returns
+    /// * `Slot` - If a slot was found with a duration enough for the constraint
+    /// * `None` - Otherwise
+    pub fn choose_slot_for_constraint(&self, constraint_duration: u8) -> Slot {
+        let date = rng().random_range(0..=6);
+        let window = rng().random_range(0..=(48 - (constraint_duration * 2)));
+
+        Slot {
+            day: date,
+            window: window,
+        }
+    }
+
     /// Schedules a constraint to a given slot
     ///
     /// # Panics
@@ -113,7 +132,43 @@ impl Schedule {
         }
 
         self.scheduled_constraints
-            .insert(constraint_id, slot.clone());
+            .insert(constraint_id, (slot.clone(), constraint_duration));
+    }
+
+    /// Unschedules all constraints starting from the specified slot until the end of the specified
+    /// duration
+    ///
+    /// # Arguments
+    /// * `slot` - The starting slot to unschedule constraints from
+    /// * `duration` - The duration to unschedule constraints from
+    pub fn unschedule_constraints_under_duration_from_slot(
+        &mut self,
+        slot: &Slot,
+        duration: u8,
+    ) -> Vec<(u32, u8, Slot)> {
+        let mut unscheduled_constraints: Vec<(u32, u8, Slot)> = Vec::new();
+        let constraints_in_day = self.grid.get(slot.day as usize).unwrap();
+
+        let mut i = 0;
+        while i < duration {
+            if let Some(constraint_id) = constraints_in_day[i as usize + slot.window as usize] {
+                let (slot, constraint_duration) = self
+                    .scheduled_constraints
+                    .get(&constraint_id)
+                    .expect("Could not get scheduled constraint");
+                unscheduled_constraints.push((constraint_id, *constraint_duration, slot.clone()));
+                i += constraint_duration;
+            } else {
+                i += 1;
+            }
+        }
+
+        unscheduled_constraints.iter().for_each(|(id, _, _)| {
+            self.unschedule_constraint(*id)
+                .expect("LOGIC ERROR: Could not unschedule scheduled constraint");
+        });
+
+        unscheduled_constraints
     }
 
     /// Unschedules a constraint from its scheduled slot in the schedule
@@ -125,12 +180,10 @@ impl Schedule {
     /// # Returns
     /// * Slot - The freed up slot after unscheduling
     /// * ScheduleError - If trying to unschedule a constraint that is not scheduled
-    pub fn unschedule_constraint(
-        &mut self,
-        constraint_id: u32,
-        constraint_duration: u8,
-    ) -> Result<Slot, ScheduleError> {
-        let Some(scheduled_slot) = self.scheduled_constraints.remove(&constraint_id) else {
+    pub fn unschedule_constraint(&mut self, constraint_id: u32) -> Result<Slot, ScheduleError> {
+        let Some((scheduled_slot, constraint_duration)) =
+            self.scheduled_constraints.remove(&constraint_id)
+        else {
             return Err(ScheduleError::ConstraintNotScheduled(constraint_id));
         };
 
@@ -158,7 +211,10 @@ impl Schedule {
     /// * `&Slot` - The scheduled slot
     /// * `None` - If the constraint is not scheduled
     pub fn get_scheduled_slot_for_constraint(&self, constraint_id: u32) -> Option<&Slot> {
-        self.scheduled_constraints.get(&constraint_id)
+        match self.scheduled_constraints.get(&constraint_id) {
+            None => None,
+            Some((slot, _)) => Some(slot),
+        }
     }
 
     /// Returns `true` if a range of slots is either empty or occupied
