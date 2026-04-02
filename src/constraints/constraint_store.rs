@@ -48,14 +48,14 @@ impl ConstraintStore {
         &mut self,
         penalties: &HashMap<u32, u32>,
     ) -> Option<&Constraint> {
-        self.constraints.choose(&mut rng())
-        //.choose_weighted(&mut rng(), |c| {
-        //    // NOTE: A base peanlty of 5 is added to each constraint to ensure even the
-        //    // constraints that are incurring no penalty has a chance to be mutated
-        //    (penalties.get(&c.id)
-        //        .expect("Error: encountered inconsistent constraint ids between penalty calculation and constraint store")) + 5
-        //})
-        //.ok()
+        self.constraints//.choose(&mut rng())
+        .choose_weighted(&mut rng(), |c| {
+            // NOTE: A base peanlty of 5 is added to each constraint to ensure even the
+            // constraints that are incurring no penalty has a chance to be mutated
+            (penalties.get(&c.id)
+                .expect("Error: encountered inconsistent constraint ids between penalty calculation and constraint store")) + 5
+        })
+        .ok()
     }
 
     /// Finds a stored scheduled constraint that is compatible to be swapped with a given duration
