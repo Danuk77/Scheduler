@@ -4,7 +4,7 @@ use csv::Writer;
 use rand::seq::IteratorRandom;
 use rand::{Rng, rng};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::error::Error;
 use std::{array, usize};
 

@@ -74,7 +74,6 @@ fn handle_scheduled_constraint(
 
     match alternative_slot {
         Some(slot) => {
-            println!("Found alternative slot for constraint {:?}", slot);
             let previous_slot = schedule
                 .unschedule_constraint(constraint_id)
                 .expect("Unexpected logic error");
@@ -90,7 +89,6 @@ fn handle_scheduled_constraint(
             return Some(changes_made);
         }
         None => {
-            println!("Did not find alternative slot.");
             let freed_slot = schedule.unschedule_constraint(constraint_id).unwrap();
             let mut changes_made: Vec<ChangeType> = vec![ChangeType::Unscheduled(
                 constraint_id,
@@ -99,11 +97,8 @@ fn handle_scheduled_constraint(
             )];
 
             let slot = schedule.choose_slot_for_constraint(constraint_duration);
-            println!("Identified slot {:?} for constraint", slot);
             let unscheduled_constraints = schedule
                 .unschedule_constraints_under_duration_from_slot(&slot, constraint_duration);
-
-            println!("Unscheduled the following constraints {:?}", unscheduled_constraints);
 
             unscheduled_constraints
                 .iter()

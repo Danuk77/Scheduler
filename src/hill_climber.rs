@@ -62,10 +62,6 @@ pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> (
                 iteration
             );
         }
-
-        //schedule
-        //    .export_to_csv(format!("generated/{}.csv", iteration), &constraints)
-        //    .expect("Could not export to csv");
     }
 
     (best_schedule, best_total_penalty)
