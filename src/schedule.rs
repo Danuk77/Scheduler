@@ -141,6 +141,10 @@ impl Schedule {
     /// # Arguments
     /// * `slot` - The starting slot to unschedule constraints from
     /// * `duration` - The duration to unschedule constraints from
+    ///
+    /// # Returns
+    /// * `vec<(u32, u8, slot)>` - A vector containing the unscheduled constraints in order, with
+    /// each element storing the constraint's (id, duration, slot it was scheduled at)
     pub fn unschedule_constraints_under_duration_from_slot(
         &mut self,
         slot: &Slot,
@@ -151,13 +155,21 @@ impl Schedule {
 
         let mut i = 0;
         while i < duration {
-            if let Some(constraint_id) = constraints_in_day[i as usize + slot.window as usize] {
-                let (slot, constraint_duration) = self
+            if let Some(constraint_id) = constraints_in_day
+                .get(slot.window as usize + i as usize)
+                .unwrap()
+            {
+                let (scheduled_slot, constraint_duration) = self
                     .scheduled_constraints
                     .get(&constraint_id)
                     .expect("Could not get scheduled constraint");
-                unscheduled_constraints.push((constraint_id, *constraint_duration, slot.clone()));
-                i += constraint_duration;
+                unscheduled_constraints.push((
+                    *constraint_id,
+                    *constraint_duration,
+                    scheduled_slot.clone(),
+                ));
+
+                i = (scheduled_slot.window + constraint_duration) - slot.window;
             } else {
                 i += 1;
             }
@@ -318,15 +330,15 @@ impl Schedule {
         ])?;
         for i in 0..48 {
             for j in 0..7 {
-                let constraint_name = match self.grid[j][i]{
+                let constraint_info = match self.grid[j][i]{
                    None => String::from("Free"),
-                   Some(constraint_id) => constraint_store
+                   Some(constraint_id) => format!("{}:{}", constraint_store
                        .get_constraint(constraint_id)
                        .expect("Unexpected logic error when exporting to csv. Could not find constraint in constraint store")
                        .name
-                       .clone()
+                       .clone(),constraint_id)
                 };
-                csv_writer.write_field(constraint_name)?;
+                csv_writer.write_field(constraint_info)?;
             }
             csv_writer.write_record(None::<&[u8]>)?;
         }

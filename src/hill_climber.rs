@@ -18,8 +18,8 @@ use rand::random;
 /// # Returns
 /// * Schedule - The output of the optimisation algorithm
 pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> (Schedule, u32) {
-    let mut temperature: f32 = 20000.0;
-    let cooling_factor = 0.999;
+    let mut temperature: f32 = 200.0;
+    let cooling_factor = 0.9999;
     let mut schedule = Schedule::new();
     let (mut penalties, mut total_penalty) = calculate_penalties(constraints, &schedule);
 
@@ -62,6 +62,10 @@ pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> (
                 iteration
             );
         }
+
+        //schedule
+        //    .export_to_csv(format!("generated/{}.csv", iteration), &constraints)
+        //    .expect("Could not export to csv");
     }
 
     (best_schedule, best_total_penalty)
