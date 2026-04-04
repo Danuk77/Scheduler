@@ -9,7 +9,7 @@ use log::debug;
 use make_small_change::evolve_schedule;
 use rand::random;
 
-/// Runs hill climbing optimisation algorithm to generate a schedule to satisfied specified
+/// Runs hill climbing optimisation algorithm to generate a schedule to satisfy specified
 /// constraints
 ///
 /// # Arguments
