@@ -1,6 +1,8 @@
 pub mod change_types;
 pub mod make_small_change;
 
+use std::error::Error;
+
 use crate::{
     constraints::{constraint_store::ConstraintStore, penalties::calculate_penalties},
     schedule::Schedule,
@@ -15,7 +17,7 @@ use rand::random;
 /// # Arguments
 /// * `constraints` - The constraints store containing all the constraints to satisfy
 /// * `iterations` - The number of iterations to run the optimisation algorithm for
-/// * `temperature` - The initial temperature to run the hill climber with 
+/// * `temperature` - The initial temperature to run the hill climber with
 /// * `cooling_factor` - The cooling factor for the temperature
 ///
 /// # Returns
@@ -25,7 +27,7 @@ pub fn run_hill_climber(
     iterations: u32,
     mut temperature: f32,
     cooling_factor: f32,
-) -> (Schedule, u32) {
+) -> Result<(Schedule, u32), Box<dyn Error>> {
     let mut schedule = Schedule::new();
     let (mut penalties, mut total_penalty) = calculate_penalties(constraints, &schedule);
 
@@ -34,7 +36,7 @@ pub fn run_hill_climber(
 
     for iteration in 0..iterations {
         debug!("Running iteration number {:?}", iteration);
-        let Some(changes) = evolve_schedule(constraints, &penalties, &mut schedule) else {
+        let Some(changes) = evolve_schedule(constraints, &penalties, &mut schedule)? else {
             debug!(
                 "Did not find optimisation schedule at iteration {:?}",
                 iteration
@@ -65,7 +67,7 @@ pub fn run_hill_climber(
         temperature *= cooling_factor;
     }
 
-    (best_schedule, best_total_penalty)
+    Ok((best_schedule, best_total_penalty))
 }
 
 /// Evaluated whether an evolution in the schedule should be accepted or not based on the realised

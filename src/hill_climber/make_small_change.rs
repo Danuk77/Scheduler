@@ -5,7 +5,7 @@ use crate::{
     hill_climber::change_types::ChangeType,
     schedule::{Schedule, Slot},
 };
-use std::collections::HashMap;
+use std::{collections::HashMap, error::Error};
 
 /// Structure used for passing allowed slots and preferred slots as one
 pub struct SchedulableSlots {
@@ -27,7 +27,7 @@ pub fn evolve_schedule(
     constraints: &mut ConstraintStore,
     incurred_penalties: &HashMap<u32, u32>,
     schedule: &mut Schedule,
-) -> Option<Vec<ChangeType>> {
+) -> Result<Option<Vec<ChangeType>>, Box<dyn Error>> {
     let constraint = constraints.get_constraint_for_optimisation(incurred_penalties)?;
 
     debug!("Constraint {:?} choosen for optimisation", constraint.name);
@@ -39,19 +39,19 @@ pub fn evolve_schedule(
     };
 
     if schedule.is_constraint_scheduled(constraint_id) {
-        return handle_scheduled_constraint(
+        return Ok(handle_scheduled_constraint(
             constraint_id,
             constraint_duration,
             schedulabe_slots_for_constraint,
             schedule,
-        );
+        ));
     } else {
-        return handle_unscheduled_constraint(
+        return Ok(handle_unscheduled_constraint(
             constraint_id,
             constraint_duration,
             schedulabe_slots_for_constraint,
             schedule,
-        );
+        ));
     }
 }
 

@@ -16,6 +16,27 @@ pub struct ConstraintStore {
     constraints: Vec<Constraint>,
 }
 
+#[derive(Debug)]
+pub enum ConstraintStoreError {
+    EmptyStore,
+    SelectionError,
+}
+
+impl fmt::Display for ConstraintStoreError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ConstraintStoreError::EmptyStore => {
+                write!(f, "There are no scheduled constraints in the store")
+            }
+            ConstraintStoreError::SelectionError => {
+                write!(f, "Error selecting constraint from store")
+            }
+        }
+    }
+}
+
+impl Error for ConstraintStoreError {}
+
 impl ConstraintStore {
     /// Create a new empty constraint store
     pub fn new() -> Self {
@@ -46,17 +67,21 @@ impl ConstraintStore {
     /// * `&Constraint` - The constraint selected for optimisation
     /// * `None` - If no constraint was selected
     pub fn get_constraint_for_optimisation(
-        &mut self,
+        &self,
         penalties: &HashMap<u32, u32>,
-    ) -> Option<&Constraint> {
-        self.constraints//.choose(&mut rng())
-        .choose_weighted(&mut rng(), |c| {
-            // NOTE: A base peanlty of 5 is added to each constraint to ensure even the
-            // constraints that are incurring no penalty has a chance to be mutated
-            (penalties.get(&c.id)
-                .expect("Error: encountered inconsistent constraint ids between penalty calculation and constraint store"))
-        })
-        .ok()
+    ) -> Result<&Constraint, ConstraintStoreError> {
+        if self.constraints.is_empty() {
+            return Err(ConstraintStoreError::EmptyStore);
+        }
+
+        // NOTE: Alternate
+        //self.constraints.choose(&mut rng())
+
+        self.constraints
+            .choose_weighted(&mut rng(), |c| {
+                *penalties.get(&c.id).expect("Error: encountered inconsistent constraint ids between penalty calculation and constraint store")
+            })
+            .map_err(|_| ConstraintStoreError::SelectionError)
     }
 
     /// Finds a stored scheduled constraint that is compatible to be swapped with a given duration

@@ -1,10 +1,12 @@
+use core::panic;
+
 use crate::{
     constraints::constraint_store::{ConstraintStore, load_constraint_store_from_file},
     hill_climber::run_hill_climber,
 };
 use anyhow::Result;
 use env_logger;
-use log::info;
+use log::{error, info};
 
 mod constraints;
 mod hill_climber;
@@ -21,7 +23,12 @@ fn main() -> Result<()> {
 
     info!("Running hill climber algorithm");
     let (schedule, total_incurred_penalty) =
-        run_hill_climber(&mut constraints, 100000, 200.0, 0.9999);
+        run_hill_climber(&mut constraints, 100000, 200.0, 0.9999).unwrap_or_else(|error| {
+            error!("Error occurred whilst running hill climber");
+            error!("{}", error);
+            panic!();
+        });
+
     info!("Finished hill climber");
 
     info!("Exporting schedule");
