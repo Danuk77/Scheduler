@@ -13,14 +13,19 @@ use rand::random;
 /// constraints
 ///
 /// # Arguments
-/// * constraints - The constraints store containing all the constraints to satisfy
-/// * iterations - The number of iterations to run the optimisation algorithm for
+/// * `constraints` - The constraints store containing all the constraints to satisfy
+/// * `iterations` - The number of iterations to run the optimisation algorithm for
+/// * `temperature` - The initial temperature to run the hill climber with 
+/// * `cooling_factor` - The cooling factor for the temperature
 ///
 /// # Returns
 /// * Schedule - The output of the optimisation algorithm
-pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> (Schedule, u32) {
-    let mut temperature: f32 = 200.0;
-    let cooling_factor = 0.9999;
+pub fn run_hill_climber(
+    constraints: &mut ConstraintStore,
+    iterations: u32,
+    mut temperature: f32,
+    cooling_factor: f32,
+) -> (Schedule, u32) {
     let mut schedule = Schedule::new();
     let (mut penalties, mut total_penalty) = calculate_penalties(constraints, &schedule);
 

@@ -12,18 +12,23 @@ mod schedule;
 
 fn main() -> Result<()> {
     env_logger::init();
+
     info!("Initialising constraint store");
     let mut constraints: ConstraintStore =
         load_constraint_store_from_file("constraints".to_string())
             .expect("Could not load constraints from file. Please ensure the file exists");
+    info!("Initalised constraint store");
 
     info!("Running hill climber algorithm");
-    let (schedule, total_incurred_penalty) = run_hill_climber(&mut constraints, 100000);
+    let (schedule, total_incurred_penalty) =
+        run_hill_climber(&mut constraints, 100000, 200.0, 0.9999);
+    info!("Finished hill climber");
+
+    info!("Exporting schedule");
     schedule
         .export_to_csv(String::from("schedule.csv"), &constraints)
         .expect("Could not export to csv");
-
-    info!("Finished hill climber");
+    info!("Exported schedule");
 
     constraints.print_schedule_report(&schedule, total_incurred_penalty);
     Ok(())
