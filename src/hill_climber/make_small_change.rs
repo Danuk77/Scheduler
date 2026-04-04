@@ -1,3 +1,5 @@
+use log::debug;
+
 use crate::{
     constraints::constraint_store::ConstraintStore,
     hill_climber::change_types::ChangeType,
@@ -28,7 +30,7 @@ pub fn evolve_schedule(
 ) -> Option<Vec<ChangeType>> {
     let constraint = constraints.get_constraint_for_optimisation(incurred_penalties)?;
 
-    println!("Constraint {:?} choosen for optimisation", constraint.name);
+    debug!("Constraint {:?} choosen for optimisation", constraint.name);
     let constraint_id = constraint.id;
     let constraint_duration = constraint.duration;
     let schedulabe_slots_for_constraint = SchedulableSlots {

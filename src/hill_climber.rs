@@ -5,6 +5,7 @@ use crate::{
     constraints::{constraint_store::ConstraintStore, penalties::calculate_penalties},
     schedule::Schedule,
 };
+use log::debug;
 use make_small_change::evolve_schedule;
 use rand::random;
 
@@ -27,10 +28,11 @@ pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> (
     let mut best_total_penalty = total_penalty;
 
     for iteration in 0..iterations {
-        println!("Running iteration number {:?}", iteration);
+        debug!("Running iteration number {:?}", iteration);
+
         if let Some(changes) = evolve_schedule(constraints, &penalties, &mut schedule) {
             let (new_penalties, new_total_penalty) = calculate_penalties(constraints, &schedule);
-            println!("Evaluated penalty. Penalty: {:?}", new_total_penalty);
+            debug!("Evaluated penalty. Penalty: {:?}", new_total_penalty);
 
             if new_total_penalty <= total_penalty {
                 total_penalty = new_total_penalty;
@@ -41,14 +43,14 @@ pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> (
                     best_schedule = schedule.clone();
                 }
             } else {
-                println!("New penalty is worse than existing best penalty");
+                debug!("New penalty is worse than existing best penalty");
                 let delta_penalty: f32 = new_total_penalty as f32 - total_penalty as f32;
                 if (-delta_penalty / temperature).exp() > random() {
-                    println!("Accepting worse schedule");
+                    debug!("Accepting worse schedule");
                     total_penalty = new_total_penalty;
                     penalties = new_penalties;
                 } else {
-                    println!("Reverting");
+                    debug!("Reverting");
                     changes
                         .iter()
                         .rev()
@@ -57,7 +59,7 @@ pub fn run_hill_climber(constraints: &mut ConstraintStore, iterations: u32) -> (
             }
             temperature *= cooling_factor;
         } else {
-            println!(
+            debug!(
                 "Did not find optimisation schedule at iteration {:?}",
                 iteration
             );

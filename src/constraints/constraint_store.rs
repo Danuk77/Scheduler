@@ -4,6 +4,7 @@ use std::fmt;
 use std::fs::File;
 
 use crate::{constraints::Constraint, schedule::Schedule};
+use log::info;
 use rand::prelude::*;
 use rand::rng;
 use serde::Deserialize;
@@ -153,42 +154,35 @@ impl ConstraintStore {
             .iter()
             .partition(|c| schedule.is_constraint_scheduled(c.id));
 
-        let total_constraints = self.constraints.len();
-        let coverage =
-            scheduled.len() as f32 / (scheduled.len() as f32 + non_scheduled.len() as f32) * 100.0;
+        let total = self.constraints.len();
+        let coverage = (scheduled.len() as f32 / total as f32) * 100.0;
 
-        println!("\n{}", "=".repeat(40));
-        println!("{:^40}", "SCHEDULE REPORT");
-        println!("{}", "=".repeat(40));
+        // Log the summary statistics
+        info!("");
+        info!("--- SCHEDULE REPORT SUMMARY ---");
+        info!("Total Constraints:       {}", total);
+        info!("Successfully Scheduled:  {}", scheduled.len());
+        info!("Non-scheduled (Gaps):    {}", non_scheduled.len());
+        info!("Schedule Fulfillment:    {:.1}%", coverage);
+        info!("Total Incurred Penalty:  {}", total_incurred_penalty);
 
-        // Summary Statistics
-        println!("{:<25} {:>14}", "Total Constraints:", total_constraints);
-        println!("{:<25} {:>14}", "Successfully Scheduled:", scheduled.len());
-        println!(
-            "{:<25} {:>14}",
-            "Non scheduled (Gaps):",
-            non_scheduled.len()
-        );
-        println!("{:<25} {:>13.1}%", "Schedule Fulfillment:", coverage);
-        println!(
-            "{:<25} {:>14}",
-            "Total incurred penalty:", total_incurred_penalty
-        );
+        // List specific constraints
+        if !scheduled.is_empty() {
+            info!("--- SCHEDULED CONSTRAINTS ---");
+            for c in scheduled {
+                info!("  [OK] id: {:<3} | type: {}", c.id, c.name);
+            }
+        }
 
-        println!("\n{}", "=".repeat(40));
-        println!("Scheduled constraints");
-        println!("{}", "=".repeat(40));
-        scheduled
-            .iter()
-            .for_each(|c| println!("constraint_type: {}, id: {}", c.name, c.id));
+        if !non_scheduled.is_empty() {
+            info!("--- NON-SCHEDULED CONSTRAINTS ---");
+            for c in non_scheduled {
+                info!("  [FAIL] id: {:<3} | type: {}", c.id, c.name);
+            }
+        }
 
-        println!("\n{}", "=".repeat(40));
-        println!("Non scheduled constraints");
-        println!("{}", "=".repeat(40));
-        non_scheduled
-            .iter()
-            .for_each(|c| println!("constraint_type: {}, id: {}", c.name, c.id));
-        println!("{}", "-".repeat(40));
+        info!("-------------------------------");
+        info!("");
     }
 }
 
