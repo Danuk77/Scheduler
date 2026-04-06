@@ -5,3 +5,7 @@ constraints.json
 
 # Generated schedules
 schedule.csv
+
+# Flamegraph data
+flamegraph.svg
+perf.data
