@@ -3,9 +3,42 @@ use std::collections::HashMap;
 use log::info;
 
 use crate::{
-    constraints::{Constraint, constraint_store::ConstraintStore},
+    constraints::{Constraint, constraint_store::ConstraintStore, penalty::Penalty},
     schedule::{Schedule, Slot},
 };
+
+/// Calculates the penalties for a set of constraints under a certain schedule
+///
+/// This function is more expensive as it will store each of the penalties incurred per penalty
+/// type basis. This function is mainly used for debugging and reporting purposes and not for
+/// evaluating the penalty in each of the iterations of the optimisation algorithm
+///
+/// # Arguments
+/// * `constraints` - The constraints to evaluate the penalties for
+/// * `schedule` - The schedule to evaluate the constraints for penalties under
+///
+/// # Returns
+/// (
+///     HashMap<
+///         u32 - The constraint id,
+///         (
+///             Penalty - The incurred penalty type,
+///             u32 - The value of the incurred penalty under that type
+///         )
+///     >
+pub fn calculate_detailed_penalties(
+    constraints: &ConstraintStore,
+    schedule: &Schedule,
+) -> HashMap<u32, Vec<(Penalty, u32)>> {
+    let mut penalties: HashMap<u32, Vec<(Penalty, u32)>> = HashMap::new();
+
+    for constraint in constraints.into_iter() {
+        let constraint_penalty = constraint.calculate_detailed_penalty(schedule, constraints);
+        penalties.insert(constraint.id, constraint_penalty);
+    }
+
+    penalties
+}
 
 /// Calculates the penalties for a set of constraints under a certain schedule
 ///
@@ -191,34 +224,49 @@ fn calculate_gap_between_slots(slot_one: &Slot, slot_two: &Slot) -> u16 {
 /// Prints a penalty report that consists of the total penalty incurred followed by
 /// the penalties for each of the individual constraints (on a penalty type basis).
 ///
+/// NOTE: The formatting is AI generated. Didnt want to spend time on that
+///
 /// # Arguments
 /// * `penalties` - Hashmap containing the penalties incurred
 /// * `constraints` - The constraint store containing all penalties
 /// * `total_incurred_penalty` - The total incurred penalty
 pub fn print_penalty_report(
-    penalties: &HashMap<u32, u32>,
     constraints: &ConstraintStore,
+    schedule: &Schedule,
     total_incurred_penalty: u32,
 ) {
-    // TODO: Make it so that each type of penalty type is printed along with their incurred penalty
-    info!("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓");
-    info!("┃                PENALTY REPORT SUMMARY                ┃");
-    info!("┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫");
-    info!("┃ Total Incurred Penalty: {:<28} ┃", total_incurred_penalty);
-    info!("┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫");
+    let penalties = calculate_detailed_penalties(constraints, schedule);
 
-    let mut collected_penalties: Vec<_> = penalties.iter().collect();
-    collected_penalties.sort_by_key(|p| p.1);
-    collected_penalties.reverse();
+    // Header - Minimalist and wide-screen friendly
+    info!("=== PENALTY REPORT SUMMARY ===");
+    info!("TOTAL INCURRED PENALTY: {}", total_incurred_penalty);
+    info!("---");
 
-    for (constraint_id, incurred_penalty) in collected_penalties {
+    let mut collected: Vec<_> = penalties.iter().collect();
+
+    collected.sort_by_key(|p| std::cmp::Reverse(p.1.iter().map(|(_, v)| v).sum::<u32>()));
+
+    for (id, instances) in collected {
         let constraint_name = constraints
-            .get_constraint(*constraint_id)
-            .map(|c| c.name.clone())
-            .unwrap_or(String::from("Unknown constraint"));
+            .get_constraint(*id)
+            .map(|c| c.name.as_str())
+            .unwrap_or("Unknown Constraint");
 
-        info!("┃ • {:<35} │ {:>10} ┃", constraint_name, incurred_penalty);
+        let total_for_group: u32 = instances.iter().map(|(_, v)| v).sum::<u32>();
+
+        info!(
+            "[{}] Total: {}",
+            constraint_name.to_uppercase(),
+            total_for_group
+        );
+
+        for (reason, value) in instances {
+            // This format string is flexible; no vertical bars to misalign
+            info!("  └─ {}: {}", reason, value);
+        }
+
+        info!("");
     }
 
-    info!("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛");
+    info!("==============================");
 }

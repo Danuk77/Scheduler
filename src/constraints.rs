@@ -51,7 +51,7 @@ pub struct Constraint {
 }
 
 impl Constraint {
-    /// Method to calculate the total penalty for the constraint
+    /// Calculates the total penalty for the constraint
     ///
     /// # Returs
     /// The calculated penalty
@@ -80,5 +80,49 @@ impl Constraint {
         }
 
         total_penalty
+    }
+
+    /// Calculates the penalties incurred by a constraint under a certain schedule
+    ///
+    /// Returns each of the penalties incurred by type
+    ///
+    /// # Arguments
+    /// * `schedule` - The schedule the penalties must be evaluated under
+    /// * `constraint_store` - The constraint store containing all the constraints
+    ///
+    /// # Returns
+    /// * `Vec<(
+    ///     Penalty - The type of incurred penalty
+    ///     u32 - The value of the incurred penalty under that type
+    /// )>`
+    pub fn calculate_detailed_penalty(
+        &self,
+        schedule: &Schedule,
+        constraint_store: &ConstraintStore,
+    ) -> Vec<(Penalty, u32)> {
+        let mut penalties: Vec<(Penalty, u32)> = Vec::new();
+
+        for penalty in &self.penalties {
+            match penalty {
+                Penalty::Presence => penalties.push((
+                    Penalty::Presence,
+                    calculate_presence_based_penalty(self, schedule),
+                )),
+                Penalty::AllowedSlots => penalties.push((
+                    Penalty::AllowedSlots,
+                    calculate_allowed_slots_based_penalty(self, schedule),
+                )),
+                Penalty::PreferredSlots => penalties.push((
+                    Penalty::PreferredSlots,
+                    calculate_preferred_slots_based_penalty(self, schedule),
+                )),
+                Penalty::Gap => penalties.push((
+                    Penalty::Gap,
+                    calculate_gap_based_penalty(self, schedule, constraint_store),
+                )),
+            }
+        }
+
+        penalties
     }
 }

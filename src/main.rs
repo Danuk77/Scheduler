@@ -25,7 +25,7 @@ fn main() -> Result<()> {
     info!("Initalised constraint store");
 
     info!("Running hill climber algorithm");
-    let (schedule, total_incurred_penalty, penalties) =
+    let (schedule, total_incurred_penalty) =
         run_hill_climber(&mut constraints, 100000, 200.0, 0.9999).unwrap_or_else(|error| {
             error!("{}", error);
             panic!();
@@ -40,6 +40,6 @@ fn main() -> Result<()> {
     info!("Exported schedule");
 
     constraints.print_schedule_report(&schedule, total_incurred_penalty);
-    print_penalty_report(&penalties, &constraints, total_incurred_penalty);
+    print_penalty_report(&constraints, &schedule, total_incurred_penalty);
     Ok(())
 }

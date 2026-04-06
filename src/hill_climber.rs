@@ -1,7 +1,7 @@
 pub mod change_types;
 pub mod make_small_change;
 
-use std::{collections::HashMap, error::Error};
+use std::error::Error;
 
 use crate::{
     constraints::{constraint_store::ConstraintStore, penalties::calculate_penalties},
@@ -27,13 +27,12 @@ pub fn run_hill_climber(
     iterations: u32,
     mut temperature: f32,
     cooling_factor: f32,
-) -> Result<(Schedule, u32, HashMap<u32, u32>), Box<dyn Error>> {
+) -> Result<(Schedule, u32), Box<dyn Error>> {
     let mut schedule = Schedule::new();
     let (mut penalties, mut total_penalty) = calculate_penalties(constraints, &schedule);
 
     let mut best_schedule = schedule.clone();
     let mut best_total_penalty = total_penalty;
-    let mut best_penalties = penalties.clone();
 
     for iteration in 0..iterations {
         debug!("Running iteration number {:?}", iteration);
@@ -63,13 +62,12 @@ pub fn run_hill_climber(
         if total_penalty <= best_total_penalty {
             best_total_penalty = total_penalty;
             best_schedule = schedule.clone();
-            best_penalties = penalties.clone();
         }
 
         temperature *= cooling_factor;
     }
 
-    Ok((best_schedule, best_total_penalty, best_penalties))
+    Ok((best_schedule, best_total_penalty))
 }
 
 /// Evaluated whether an evolution in the schedule should be accepted or not based on the realised
