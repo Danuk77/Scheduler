@@ -1,7 +1,10 @@
 use core::panic;
 
 use crate::{
-    constraints::constraint_store::{ConstraintStore, load_constraint_store_from_file},
+    constraints::{
+        constraint_store::{ConstraintStore, load_constraint_store_from_file},
+        penalties::print_penalty_report,
+    },
     hill_climber::run_hill_climber,
 };
 use anyhow::Result;
@@ -22,9 +25,8 @@ fn main() -> Result<()> {
     info!("Initalised constraint store");
 
     info!("Running hill climber algorithm");
-    let (schedule, total_incurred_penalty) =
+    let (schedule, total_incurred_penalty, penalties) =
         run_hill_climber(&mut constraints, 100000, 200.0, 0.9999).unwrap_or_else(|error| {
-            error!("Error occurred whilst running hill climber");
             error!("{}", error);
             panic!();
         });
@@ -38,5 +40,6 @@ fn main() -> Result<()> {
     info!("Exported schedule");
 
     constraints.print_schedule_report(&schedule, total_incurred_penalty);
+    print_penalty_report(&penalties, &constraints, total_incurred_penalty);
     Ok(())
 }

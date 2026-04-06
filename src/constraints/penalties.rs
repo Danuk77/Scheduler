@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use log::info;
+
 use crate::{
     constraints::{Constraint, constraint_store::ConstraintStore},
     schedule::{Schedule, Slot},
@@ -184,4 +186,39 @@ fn calculate_gap_between_slots(slot_one: &Slot, slot_two: &Slot) -> u16 {
     let window_gap = slot_one.window as i16 - slot_two.window as i16;
 
     ((day_gap * 48) + window_gap).unsigned_abs()
+}
+
+/// Prints a penalty report that consists of the total penalty incurred followed by
+/// the penalties for each of the individual constraints (on a penalty type basis).
+///
+/// # Arguments
+/// * `penalties` - Hashmap containing the penalties incurred
+/// * `constraints` - The constraint store containing all penalties
+/// * `total_incurred_penalty` - The total incurred penalty
+pub fn print_penalty_report(
+    penalties: &HashMap<u32, u32>,
+    constraints: &ConstraintStore,
+    total_incurred_penalty: u32,
+) {
+    // TODO: Make it so that each type of penalty type is printed along with their incurred penalty
+    info!("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓");
+    info!("┃                PENALTY REPORT SUMMARY                ┃");
+    info!("┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫");
+    info!("┃ Total Incurred Penalty: {:<28} ┃", total_incurred_penalty);
+    info!("┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫");
+
+    let mut collected_penalties: Vec<_> = penalties.iter().collect();
+    collected_penalties.sort_by_key(|p| p.1);
+    collected_penalties.reverse();
+
+    for (constraint_id, incurred_penalty) in collected_penalties {
+        let constraint_name = constraints
+            .get_constraint(*constraint_id)
+            .map(|c| c.name.clone())
+            .unwrap_or(String::from("Unknown constraint"));
+
+        info!("┃ • {:<35} │ {:>10} ┃", constraint_name, incurred_penalty);
+    }
+
+    info!("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛");
 }
