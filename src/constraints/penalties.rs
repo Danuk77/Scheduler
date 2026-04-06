@@ -255,7 +255,8 @@ pub fn print_penalty_report(
         let total_for_group: u32 = instances.iter().map(|(_, v)| v).sum::<u32>();
 
         info!(
-            "[{}] Total: {}",
+            "[{}:{}] Total: {}",
+            id,
             constraint_name.to_uppercase(),
             total_for_group
         );
