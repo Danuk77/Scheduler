@@ -215,7 +215,16 @@ pub fn calculate_gap_based_penalty(
 /// # Returns
 /// * `u16` - The total number of slots between the two slots
 fn calculate_gap_between_slots(slot_one: &Slot, slot_two: &Slot) -> u16 {
-    let day_gap = slot_one.day as i16 - slot_two.day as i16;
+    let mut day_gap = slot_one.day as i16 - slot_two.day as i16;
+
+    if day_gap.abs() > 3 {
+        if day_gap < 0 {
+            day_gap = 7 + day_gap;
+        } else {
+            day_gap = 7 - day_gap;
+        }
+    };
+
     let window_gap = slot_one.window as i16 - slot_two.window as i16;
 
     ((day_gap * 48) + window_gap).unsigned_abs()
@@ -253,6 +262,9 @@ pub fn print_penalty_report(
             .unwrap_or("Unknown Constraint");
 
         let total_for_group: u32 = instances.iter().map(|(_, v)| v).sum::<u32>();
+        if total_for_group <= 0 {
+            continue;
+        }
 
         info!(
             "[{}:{}] Total: {}",
