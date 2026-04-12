@@ -309,6 +309,28 @@ impl Schedule {
         false
     }
 
+    /// Moves the constraint into a specified slot
+    ///
+    /// # Arguments
+    /// * `constraint_id` - The if of the constraint to move
+    /// * `constraint_duration` - The duration of the constraint to move
+    /// * `new_slot` - The slot to move the constraint to
+    ///
+    /// # Returns
+    /// * Slot - The previous slot the constraint was scheduled at prior to the move
+    /// *
+    pub fn move_constraint(
+        &mut self,
+        constraint_id: u32,
+        constraint_duration: u8,
+        new_slot: Slot,
+    ) -> Result<Slot, ScheduleError> {
+        let previous_slot = self.unschedule_constraint(constraint_id)?;
+        self.schedule_constraint(constraint_id, constraint_duration, &new_slot);
+
+        Ok(previous_slot)
+    }
+
     /// Exports the schedule to a csv file
     ///
     /// # Arguments

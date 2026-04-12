@@ -1,8 +1,8 @@
-use log::debug;
+use log::{debug};
 
 use crate::{
     constraints::constraint_store::ConstraintStore,
-    hill_climber::change_types::ChangeType,
+    hill_climber::{OptimisationStats, change_types::ChangeType},
     schedule::{Schedule, Slot},
 };
 use std::{collections::HashMap, error::Error};
@@ -27,6 +27,7 @@ pub fn evolve_schedule(
     constraints: &mut ConstraintStore,
     incurred_penalties: &HashMap<u32, u32>,
     schedule: &mut Schedule,
+    stats: &mut OptimisationStats,
 ) -> Result<Option<Vec<ChangeType>>, Box<dyn Error>> {
     let constraint = constraints.get_constraint_for_optimisation(incurred_penalties)?;
 
@@ -44,6 +45,7 @@ pub fn evolve_schedule(
             constraint_duration,
             schedulabe_slots_for_constraint,
             schedule,
+            stats,
         ));
     } else {
         return Ok(handle_unscheduled_constraint(
@@ -51,6 +53,7 @@ pub fn evolve_schedule(
             constraint_duration,
             schedulabe_slots_for_constraint,
             schedule,
+            stats,
         ));
     }
 }
@@ -69,48 +72,42 @@ fn handle_scheduled_constraint(
     constraint_duration: u8,
     schedulable_slots: SchedulableSlots,
     schedule: &mut Schedule,
+    stats: &mut OptimisationStats,
 ) -> Option<Vec<ChangeType>> {
-    let mut changes_made: Vec<ChangeType> = Vec::new();
     let alternative_slot =
         schedule.get_free_slot_for_constraint(constraint_duration, &schedulable_slots);
 
-    match alternative_slot {
-        Some(slot) => {
-            let previous_slot = schedule
-                .unschedule_constraint(constraint_id)
-                .expect("Unexpected logic error");
-            changes_made.push(ChangeType::Unscheduled(
-                constraint_id,
-                constraint_duration,
-                previous_slot,
-            ));
-
-            schedule.schedule_constraint(constraint_id, constraint_duration, &slot);
-            changes_made.push(ChangeType::Scheduled(constraint_id));
-
-            return Some(changes_made);
-        }
-        None => {
-            let freed_slot = schedule.unschedule_constraint(constraint_id).unwrap();
-            let mut changes_made: Vec<ChangeType> = vec![ChangeType::Unscheduled(
-                constraint_id,
-                constraint_duration,
-                freed_slot.clone(),
-            )];
-
-            let slot = schedule.choose_slot_for_constraint(constraint_duration);
-            let unscheduled_constraints = schedule
-                .unschedule_constraints_under_duration_from_slot(&slot, constraint_duration);
-
-            unscheduled_constraints
-                .iter()
-                .for_each(|c| changes_made.push(ChangeType::Unscheduled(c.0, c.1, c.2.clone())));
-
-            schedule.schedule_constraint(constraint_id, constraint_duration, &slot);
-            changes_made.push(ChangeType::Scheduled(constraint_id));
-            Some(changes_made)
-        }
+    if let Some(slot) = alternative_slot {
+        // TODO: Better error management
+        let previous_slot = schedule
+            .move_constraint(constraint_id, constraint_duration, slot)
+            .unwrap();
+        stats.move_count += 1;
+        return Some(vec![
+            ChangeType::Unscheduled(constraint_id, constraint_duration, previous_slot),
+            ChangeType::Scheduled(constraint_id),
+        ]);
     }
+
+    stats.unscheduling_scheduled_count += 1;
+    let freed_slot = schedule.unschedule_constraint(constraint_id).unwrap();
+    let mut changes_made: Vec<ChangeType> = vec![ChangeType::Unscheduled(
+        constraint_id,
+        constraint_duration,
+        freed_slot.clone(),
+    )];
+
+    let slot = schedule.choose_slot_for_constraint(constraint_duration);
+    let unscheduled_constraints =
+        schedule.unschedule_constraints_under_duration_from_slot(&slot, constraint_duration);
+
+    unscheduled_constraints
+        .iter()
+        .for_each(|c| changes_made.push(ChangeType::Unscheduled(c.0, c.1, c.2.clone())));
+
+    schedule.schedule_constraint(constraint_id, constraint_duration, &slot);
+    changes_made.push(ChangeType::Scheduled(constraint_id));
+    Some(changes_made)
 }
 
 /// Function called when trying to optimise a constraint that is not yet scheduled
@@ -130,13 +127,16 @@ fn handle_unscheduled_constraint(
     constraint_duration: u8,
     schedulable_slots: SchedulableSlots,
     schedule: &mut Schedule,
+    stats: &mut OptimisationStats,
 ) -> Option<Vec<ChangeType>> {
     match schedule.get_free_slot_for_constraint(constraint_duration, &schedulable_slots) {
         Some(slot) => {
             schedule.schedule_constraint(constraint_id, constraint_duration, &slot);
+            stats.schedule_count += 1;
             Some(vec![ChangeType::Scheduled(constraint_id)])
         }
         None => {
+            stats.unscheduling_unscheduled_count += 1;
             let slot = schedule.choose_slot_for_constraint(constraint_duration);
             let unscheduled_constraints = schedule
                 .unschedule_constraints_under_duration_from_slot(&slot, constraint_duration);

@@ -11,6 +11,15 @@ use log::debug;
 use make_small_change::evolve_schedule;
 use rand::random;
 
+/// A simple struct to store simple statistics about a run of the optimisation algorithm
+#[derive(Default)]
+pub struct OptimisationStats {
+    pub move_count: u32,
+    pub schedule_count: u32,
+    pub unscheduling_scheduled_count: u32,
+    pub unscheduling_unscheduled_count: u32,
+}
+
 /// Runs hill climbing optimisation algorithm to generate a schedule to satisfy specified
 /// constraints
 ///
@@ -27,11 +36,12 @@ pub fn run_hill_climber(
     iterations: u32,
     initial_temperature: f32,
     cooling_factor: f32,
-) -> Result<(Schedule, u32), Box<dyn Error>> {
+) -> Result<(Schedule, u32, OptimisationStats), Box<dyn Error>> {
     let mut schedule = Schedule::new();
     let (mut penalties, mut total_penalty) = calculate_penalties(constraints, &schedule);
     let mut temperature = initial_temperature;
     let mut stagnant_counter = 0;
+    let mut stats = OptimisationStats::default();
 
     let mut best_schedule = schedule.clone();
     let mut best_total_penalty = total_penalty;
@@ -40,7 +50,8 @@ pub fn run_hill_climber(
         debug!("Running iteration number {:?}", iteration);
         temperature *= cooling_factor;
 
-        let Some(changes) = evolve_schedule(constraints, &penalties, &mut schedule)? else {
+        let Some(changes) = evolve_schedule(constraints, &penalties, &mut schedule, &mut stats)?
+        else {
             debug!(
                 "Did not find optimisation schedule at iteration {:?}",
                 iteration
@@ -76,7 +87,7 @@ pub fn run_hill_climber(
         }
     }
 
-    Ok((best_schedule, best_total_penalty))
+    Ok((best_schedule, best_total_penalty, stats))
 }
 
 /// Evaluated whether an evolution in the schedule should be accepted or not based on the realised

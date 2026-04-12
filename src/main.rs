@@ -25,7 +25,7 @@ fn main() -> Result<()> {
     info!("Initalised constraint store");
 
     info!("Running hill climber algorithm");
-    let (schedule, total_incurred_penalty) =
+    let (schedule, total_incurred_penalty, stats) =
         run_hill_climber(&mut constraints, 100000, 200.0, 0.9999).unwrap_or_else(|error| {
             error!("{}", error);
             panic!();
@@ -41,5 +41,17 @@ fn main() -> Result<()> {
 
     constraints.print_schedule_report(&schedule, total_incurred_penalty);
     print_penalty_report(&constraints, &schedule, total_incurred_penalty);
+
+    info!("MOVE COUNT: {}", stats.move_count);
+    info!("SCHEDULE COUNT: {}", stats.schedule_count);
+    info!(
+        "UNSCHEDULE SCHEDULED COUNT: {}",
+        stats.unscheduling_scheduled_count
+    );
+    info!(
+        "UNSCHEDULE UNSCHEDULED COUNT: {}",
+        stats.unscheduling_unscheduled_count
+    );
+
     Ok(())
 }
