@@ -6,19 +6,12 @@ use std::error::Error;
 use crate::{
     constraints::{constraint_store::ConstraintStore, penalties::calculate_penalties},
     schedule::Schedule,
+    stats::OptimisationStats
 };
 use log::debug;
 use make_small_change::evolve_schedule;
 use rand::random;
 
-/// A simple struct to store simple statistics about a run of the optimisation algorithm
-#[derive(Default)]
-pub struct OptimisationStats {
-    pub move_count: u32,
-    pub schedule_count: u32,
-    pub unscheduling_scheduled_count: u32,
-    pub unscheduling_unscheduled_count: u32,
-}
 
 /// Runs hill climbing optimisation algorithm to generate a schedule to satisfy specified
 /// constraints
@@ -66,12 +59,14 @@ pub fn run_hill_climber(
         if !_should_accept_schedule(new_total_penalty, total_penalty, temperature) {
             debug!("Evolution not accepted. Reverting");
             stagnant_counter += 1;
+            stats.revert_count += 1;
             changes
                 .iter()
                 .rev()
                 .for_each(|change| change.revert_change(&mut schedule));
 
             if stagnant_counter >= 500 {
+                stats.reset_count += 1;
                 stagnant_counter = 0;
                 temperature = initial_temperature;
             }

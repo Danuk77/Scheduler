@@ -14,6 +14,7 @@ use log::{error, info};
 mod constraints;
 mod hill_climber;
 mod schedule;
+mod stats;
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -39,19 +40,9 @@ fn main() -> Result<()> {
         .expect("Could not export to csv");
     info!("Exported schedule");
 
+    stats.generate_optimisation_report();
     constraints.print_schedule_report(&schedule, total_incurred_penalty);
     print_penalty_report(&constraints, &schedule, total_incurred_penalty);
-
-    info!("MOVE COUNT: {}", stats.move_count);
-    info!("SCHEDULE COUNT: {}", stats.schedule_count);
-    info!(
-        "UNSCHEDULE SCHEDULED COUNT: {}",
-        stats.unscheduling_scheduled_count
-    );
-    info!(
-        "UNSCHEDULE UNSCHEDULED COUNT: {}",
-        stats.unscheduling_unscheduled_count
-    );
 
     Ok(())
 }
