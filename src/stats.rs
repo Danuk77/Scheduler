@@ -3,10 +3,13 @@ use log::info;
 /// A simple struct to store simple statistics about a run of the optimisation algorithm
 #[derive(Default)]
 pub struct OptimisationStats {
+    // Move operators
     pub move_count: u32,
     pub schedule_count: u32,
     pub unscheduling_scheduled_count: u32,
     pub unscheduling_unscheduled_count: u32,
+    pub swap_count: u32,
+
     pub revert_count: u32,
     pub reset_count: u32,
 }
@@ -30,6 +33,7 @@ impl OptimisationStats {
 
         info!("▶ Mutation Types");
         info!("  ├─ Moves: {}", self.move_count);
+        info!("  ├─ Swaps: {}", self.swap_count);
         info!("  ├─ New schedulings: {}", self.schedule_count);
         info!(
             "  └─ Mass unscheduling scheduled: {}",

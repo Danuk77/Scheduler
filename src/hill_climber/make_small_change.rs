@@ -1,8 +1,16 @@
-use log::{debug};
+use log::debug;
+use rand::{rng, seq::IndexedRandom};
 
 use crate::{
     constraints::constraint_store::ConstraintStore,
-    hill_climber::{OptimisationStats, change_types::ChangeType},
+    hill_climber::{
+        OptimisationStats,
+        change_types::ChangeType,
+        optimisation_strategies::{
+            OptimisationStrategy, execute_move_strategy, execute_schedule_strategy,
+            execute_substitute_strategy, execute_swap_strategy,
+        },
+    },
     schedule::{Schedule, Slot},
 };
 use std::{collections::HashMap, error::Error};
@@ -41,6 +49,7 @@ pub fn evolve_schedule(
 
     if schedule.is_constraint_scheduled(constraint_id) {
         return Ok(handle_scheduled_constraint(
+            constraints,
             constraint_id,
             constraint_duration,
             schedulabe_slots_for_constraint,
@@ -68,46 +77,57 @@ pub fn evolve_schedule(
 /// * Vec<ChangeType> - A vector containing all the changes performed (in order)
 /// * None - If no optimisation was performed
 fn handle_scheduled_constraint(
+    constraint_store: &mut ConstraintStore,
     constraint_id: u32,
     constraint_duration: u8,
     schedulable_slots: SchedulableSlots,
     schedule: &mut Schedule,
     stats: &mut OptimisationStats,
 ) -> Option<Vec<ChangeType>> {
-    let alternative_slot =
-        schedule.get_free_slot_for_constraint(constraint_duration, &schedulable_slots);
+    let (option, _) = [
+        (OptimisationStrategy::MOVE, 3),
+        (OptimisationStrategy::UNSCHEDULE, 1),
+        (OptimisationStrategy::SWAP, 1),
+    ]
+    .choose_weighted(&mut rng(), |s| s.1)
+    .unwrap();
 
-    if let Some(slot) = alternative_slot {
-        // TODO: Better error management
-        let previous_slot = schedule
-            .move_constraint(constraint_id, constraint_duration, slot)
-            .unwrap();
-        stats.move_count += 1;
-        return Some(vec![
-            ChangeType::Unscheduled(constraint_id, constraint_duration, previous_slot),
-            ChangeType::Scheduled(constraint_id),
-        ]);
+    match option {
+        OptimisationStrategy::MOVE => {
+            stats.move_count += 1;
+            return execute_move_strategy(
+                schedule,
+                constraint_id,
+                constraint_duration,
+                schedulable_slots,
+            );
+        }
+        OptimisationStrategy::UNSCHEDULE => {
+            stats.unscheduling_scheduled_count += 1;
+
+            // First unschedule the constraint from its existing slot
+            let freed_slot = schedule.unschedule_constraint(constraint_id).unwrap();
+            let mut changes_made =
+                execute_substitute_strategy(schedule, constraint_id, constraint_duration)?;
+            changes_made.insert(
+                0,
+                ChangeType::Unscheduled(constraint_id, constraint_duration, freed_slot.clone()),
+            );
+            Some(changes_made)
+        }
+        OptimisationStrategy::SWAP => {
+            stats.swap_count += 1;
+            return execute_swap_strategy(
+                constraint_id,
+                constraint_duration,
+                constraint_store,
+                schedule,
+            );
+        }
+        _ => panic!(
+            "Logic error: Should not reach here. The specified strategy is not valid for scheduled constraint"
+        ),
     }
-
-    stats.unscheduling_scheduled_count += 1;
-    let freed_slot = schedule.unschedule_constraint(constraint_id).unwrap();
-    let mut changes_made: Vec<ChangeType> = vec![ChangeType::Unscheduled(
-        constraint_id,
-        constraint_duration,
-        freed_slot.clone(),
-    )];
-
-    let slot = schedule.choose_slot_for_constraint(constraint_duration);
-    let unscheduled_constraints =
-        schedule.unschedule_constraints_under_duration_from_slot(&slot, constraint_duration);
-
-    unscheduled_constraints
-        .iter()
-        .for_each(|c| changes_made.push(ChangeType::Unscheduled(c.0, c.1, c.2.clone())));
-
-    schedule.schedule_constraint(constraint_id, constraint_duration, &slot);
-    changes_made.push(ChangeType::Scheduled(constraint_id));
-    Some(changes_made)
 }
 
 /// Function called when trying to optimise a constraint that is not yet scheduled
@@ -131,22 +151,12 @@ fn handle_unscheduled_constraint(
 ) -> Option<Vec<ChangeType>> {
     match schedule.get_free_slot_for_constraint(constraint_duration, &schedulable_slots) {
         Some(slot) => {
-            schedule.schedule_constraint(constraint_id, constraint_duration, &slot);
             stats.schedule_count += 1;
-            Some(vec![ChangeType::Scheduled(constraint_id)])
+            return execute_schedule_strategy(schedule, constraint_id, constraint_duration, slot);
         }
         None => {
             stats.unscheduling_unscheduled_count += 1;
-            let slot = schedule.choose_slot_for_constraint(constraint_duration);
-            let unscheduled_constraints = schedule
-                .unschedule_constraints_under_duration_from_slot(&slot, constraint_duration);
-            schedule.schedule_constraint(constraint_id, constraint_duration, &slot);
-            let mut changes_made: Vec<ChangeType> = unscheduled_constraints
-                .iter()
-                .map(|c| ChangeType::Unscheduled(c.0, c.1, c.2.clone()))
-                .collect();
-            changes_made.push(ChangeType::Scheduled(constraint_id));
-            Some(changes_made)
+            return execute_substitute_strategy(schedule, constraint_id, constraint_duration);
         }
     }
 }

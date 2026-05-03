@@ -1,5 +1,6 @@
 pub mod change_types;
 pub mod make_small_change;
+mod optimisation_strategies; 
 
 use std::error::Error;
 
