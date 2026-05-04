@@ -26,6 +26,7 @@ fn main() -> Result<()> {
     info!("Initalised constraint store");
 
     info!("Running hill climber algorithm");
+    // TODO: Refactor the name of the algorithm from hill climber to something else
     let (schedule, total_incurred_penalty, stats) =
         run_hill_climber(&mut constraints, 100000, 200.0, 0.9999).unwrap_or_else(|error| {
             error!("{}", error);

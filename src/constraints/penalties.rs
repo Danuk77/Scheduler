@@ -198,6 +198,7 @@ pub fn calculate_gap_based_penalty(
                 .unwrap(),
         );
 
+        // TODO: Change based on constraint priority
         if gap < constraint.gap.expect("Unexpected call calculating gap based penalty when no gap was specified for constraint") {
             return 3;
         }
