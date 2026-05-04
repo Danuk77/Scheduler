@@ -1,0 +1,760 @@
+{
+  "constraints": [
+    {
+      "name": "Badminton",
+      "id": 1,
+      "penalties": [
+        "Gap",
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 4,
+      "gap": 96,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 40
+        },
+        {
+          "day": 1,
+          "window": 38
+        },
+        {
+          "day": 2,
+          "window": 40
+        },
+        {
+          "day": 4,
+          "window": 40
+        },
+        {
+          "day": 6,
+          "window": 16
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Badminton",
+      "id": 2,
+      "penalties": [
+        "Gap",
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 4,
+      "gap": 96,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 40
+        },
+        {
+          "day": 1,
+          "window": 38
+        },
+        {
+          "day": 2,
+          "window": 40
+        },
+        {
+          "day": 4,
+          "window": 40
+        },
+        {
+          "day": 6,
+          "window": 16
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Badminton",
+      "id": 3,
+      "penalties": [
+        "Gap",
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 4,
+      "gap": 96,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 40
+        },
+        {
+          "day": 1,
+          "window": 38
+        },
+        {
+          "day": 2,
+          "window": 40
+        },
+        {
+          "day": 4,
+          "window": 40
+        },
+        {
+          "day": 6,
+          "window": 16
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Cooking",
+      "id": 4,
+      "penalties": [
+        "Presence",
+        "Gap",
+        "PreferredSlots"
+      ],
+      "priority": "High",
+      "duration": 4,
+      "gap": 192,
+      "allowed_slots": null,
+      "preferred_slots": [
+        {
+          "day": 0,
+          "window": 35
+        },
+        {
+          "day": 5,
+          "window": 22
+        }
+      ]
+    },
+    {
+      "name": "Cooking",
+      "id": 5,
+      "penalties": [
+        "Presence",
+        "Gap",
+        "PreferredSlots"
+      ],
+      "priority": "High",
+      "duration": 4,
+      "gap": 192,
+      "allowed_slots": null,
+      "preferred_slots": [
+        {
+          "day": 0,
+          "window": 35
+        },
+        {
+          "day": 5,
+          "window": 22
+        }
+      ]
+    },
+    {
+      "name": "Gym",
+      "id": 6,
+      "penalties": [
+        "Gap",
+        "Presence"
+      ],
+      "priority": "High",
+      "duration": 4,
+      "gap": 96,
+      "allowed_slots": null,
+      "preferred_slots": null
+    },
+    {
+      "name": "Gym",
+      "id": 7,
+      "penalties": [
+        "Gap",
+        "Presence"
+      ],
+      "priority": "High",
+      "duration": 4,
+      "gap": 96,
+      "allowed_slots": null,
+      "preferred_slots": null
+    },
+    {
+      "name": "Gym",
+      "id": 8,
+      "penalties": [
+        "Gap",
+        "Presence"
+      ],
+      "priority": "High",
+      "duration": 4,
+      "gap": 96,
+      "allowed_slots": null,
+      "preferred_slots": null
+    },
+    {
+      "name": "Work",
+      "id": 9,
+      "penalties": [
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 16,
+      "gap": null,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 18
+        },
+        {
+          "day": 1,
+          "window": 18
+        },
+        {
+          "day": 2,
+          "window": 18
+        },
+        {
+          "day": 3,
+          "window": 18
+        },
+        {
+          "day": 4,
+          "window": 18
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Work",
+      "id": 10,
+      "penalties": [
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 16,
+      "gap": null,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 18
+        },
+        {
+          "day": 1,
+          "window": 18
+        },
+        {
+          "day": 2,
+          "window": 18
+        },
+        {
+          "day": 3,
+          "window": 18
+        },
+        {
+          "day": 4,
+          "window": 18
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Work",
+      "id": 11,
+      "penalties": [
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 16,
+      "gap": null,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 18
+        },
+        {
+          "day": 1,
+          "window": 18
+        },
+        {
+          "day": 2,
+          "window": 18
+        },
+        {
+          "day": 3,
+          "window": 18
+        },
+        {
+          "day": 4,
+          "window": 18
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Work",
+      "id": 12,
+      "penalties": [
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 16,
+      "gap": null,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 18
+        },
+        {
+          "day": 1,
+          "window": 18
+        },
+        {
+          "day": 2,
+          "window": 18
+        },
+        {
+          "day": 3,
+          "window": 18
+        },
+        {
+          "day": 4,
+          "window": 18
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Work",
+      "id": 13,
+      "penalties": [
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 16,
+      "gap": null,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 18
+        },
+        {
+          "day": 1,
+          "window": 18
+        },
+        {
+          "day": 2,
+          "window": 18
+        },
+        {
+          "day": 3,
+          "window": 18
+        },
+        {
+          "day": 4,
+          "window": 18
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Driving lessons",
+      "id": 14,
+      "penalties": [
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "Low",
+      "duration": 4,
+      "gap": null,
+      "allowed_slots": [
+        {
+          "day": 6,
+          "window": 22
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Cleaning",
+      "id": 15,
+      "penalties": [
+        "Presence"
+      ],
+      "priority": "Low",
+      "duration": 2,
+      "gap": null,
+      "allowed_slots": null,
+      "preferred_slots": null
+    },
+    {
+      "name": "Side project (Game engine)",
+      "id": 16,
+      "penalties": [
+        "Presence"
+      ],
+      "priority": "High",
+      "duration": 4,
+      "gap": null,
+      "allowed_slots": null,
+      "preferred_slots": null
+    },
+    {
+      "name": "Side project (Game engine)",
+      "id": 17,
+      "penalties": [
+        "Presence"
+      ],
+      "priority": "High",
+      "duration": 4,
+      "gap": null,
+      "allowed_slots": null,
+      "preferred_slots": null
+    },
+    {
+      "name": "Side project (Game engine)",
+      "id": 18,
+      "penalties": [
+        "Presence"
+      ],
+      "priority": "High",
+      "duration": 4,
+      "gap": null,
+      "allowed_slots": null,
+      "preferred_slots": null
+    },
+    {
+      "name": "Side project (Scheduler)",
+      "id": 19,
+      "penalties": [
+        "Presence"
+      ],
+      "priority": "Low",
+      "duration": 4,
+      "gap": null,
+      "allowed_slots": null,
+      "preferred_slots": null
+    },
+    {
+      "name": "Side project (Scheduler)",
+      "id": 20,
+      "penalties": [
+        "Presence"
+      ],
+      "priority": "Low",
+      "duration": 4,
+      "gap": null,
+      "allowed_slots": null,
+      "preferred_slots": null
+    },
+    {
+      "name": "Side project (Scheduler)",
+      "id": 21,
+      "penalties": [
+        "Presence"
+      ],
+      "priority": "Low",
+      "duration": 4,
+      "gap": null,
+      "allowed_slots": null,
+      "preferred_slots": null
+    },
+    {
+      "name": "Sleep",
+      "id": 22,
+      "penalties": [
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 16,
+      "gap": null,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 0
+        },
+        {
+          "day": 1,
+          "window": 0
+        },
+        {
+          "day": 2,
+          "window": 0
+        },
+        {
+          "day": 3,
+          "window": 0
+        },
+        {
+          "day": 4,
+          "window": 0
+        },
+        {
+          "day": 5,
+          "window": 0
+        },
+        {
+          "day": 6,
+          "window": 0
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Sleep",
+      "id": 23,
+      "penalties": [
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 16,
+      "gap": null,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 0
+        },
+        {
+          "day": 1,
+          "window": 0
+        },
+        {
+          "day": 2,
+          "window": 0
+        },
+        {
+          "day": 3,
+          "window": 0
+        },
+        {
+          "day": 4,
+          "window": 0
+        },
+        {
+          "day": 5,
+          "window": 0
+        },
+        {
+          "day": 6,
+          "window": 0
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Sleep",
+      "id": 24,
+      "penalties": [
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 16,
+      "gap": null,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 0
+        },
+        {
+          "day": 1,
+          "window": 0
+        },
+        {
+          "day": 2,
+          "window": 0
+        },
+        {
+          "day": 3,
+          "window": 0
+        },
+        {
+          "day": 4,
+          "window": 0
+        },
+        {
+          "day": 5,
+          "window": 0
+        },
+        {
+          "day": 6,
+          "window": 0
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Sleep",
+      "id": 25,
+      "penalties": [
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 16,
+      "gap": null,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 0
+        },
+        {
+          "day": 1,
+          "window": 0
+        },
+        {
+          "day": 2,
+          "window": 0
+        },
+        {
+          "day": 3,
+          "window": 0
+        },
+        {
+          "day": 4,
+          "window": 0
+        },
+        {
+          "day": 5,
+          "window": 0
+        },
+        {
+          "day": 6,
+          "window": 0
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Sleep",
+      "id": 26,
+      "penalties": [
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 16,
+      "gap": null,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 0
+        },
+        {
+          "day": 1,
+          "window": 0
+        },
+        {
+          "day": 2,
+          "window": 0
+        },
+        {
+          "day": 3,
+          "window": 0
+        },
+        {
+          "day": 4,
+          "window": 0
+        },
+        {
+          "day": 5,
+          "window": 0
+        },
+        {
+          "day": 6,
+          "window": 0
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Sleep",
+      "id": 27,
+      "penalties": [
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 16,
+      "gap": null,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 0
+        },
+        {
+          "day": 1,
+          "window": 0
+        },
+        {
+          "day": 2,
+          "window": 0
+        },
+        {
+          "day": 3,
+          "window": 0
+        },
+        {
+          "day": 4,
+          "window": 0
+        },
+        {
+          "day": 5,
+          "window": 0
+        },
+        {
+          "day": 6,
+          "window": 0
+        }
+      ],
+      "preferred_slots": null
+    },
+    {
+      "name": "Sleep",
+      "id": 28,
+      "penalties": [
+        "Presence",
+        "AllowedSlots"
+      ],
+      "priority": "High",
+      "duration": 16,
+      "gap": null,
+      "allowed_slots": [
+        {
+          "day": 0,
+          "window": 0
+        },
+        {
+          "day": 1,
+          "window": 0
+        },
+        {
+          "day": 2,
+          "window": 0
+        },
+        {
+          "day": 3,
+          "window": 0
+        },
+        {
+          "day": 4,
+          "window": 0
+        },
+        {
+          "day": 5,
+          "window": 0
+        },
+        {
+          "day": 6,
+          "window": 0
+        }
+      ],
+      "preferred_slots": null
+    }
+  ]
+}

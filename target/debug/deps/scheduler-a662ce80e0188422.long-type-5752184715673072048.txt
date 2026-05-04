@@ -1,0 +1,1 @@
+std::iter::Map<std::slice::Iter<'_, (u32, u8, Slot)>, {closure@src/hill_climber/optimisation_strategies.rs:52:14: 52:17}>
