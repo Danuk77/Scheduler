@@ -86,8 +86,7 @@ impl ConstraintStore {
 
     /// Finds a stored scheduled constraint that is compatible to be swapped with a given duration
     ///
-    /// A higher chance is given to constraints with smaller duration to be selected if they are
-    /// compatible to be swapped
+    ///For a constraint to be compatible, it must be scheduled and of the same duration
     ///
     /// # Arguments
     /// * `constraint_id` - The id of the constraint for which we want to find a swappable constraint
@@ -109,6 +108,7 @@ impl ConstraintStore {
             .filter(|c| {
                 c.id != constraint_id
                     && schedule.is_constraint_scheduled(c.id)
+                    && c.duration == constraint_duration
                     && schedule.is_duration_free_or_owned_by(
                         &c.id,
                         constraint_duration,

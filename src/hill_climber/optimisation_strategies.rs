@@ -60,8 +60,6 @@ pub fn execute_swap_strategy(
     )?;
 
     // TODO: Better error handling
-    // TODO: FIx the bug where the first constraint might not be big enough for the compatible
-    // constraint to fit into
     let previous_slot = schedule.unschedule_constraint(constraint_id).unwrap();
     let freed_slot = schedule
         .unschedule_constraint(swappable_constraint.id)

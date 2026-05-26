@@ -84,8 +84,6 @@ fn handle_scheduled_constraint(
     schedule: &mut Schedule,
     stats: &mut OptimisationStats,
 ) -> Option<Vec<ChangeType>> {
-    // TODO: Add comment about what is going here
-    // Maybe move it into a separate function
     let (option, _) = [
         (OptimisationStrategy::MOVE, 3),
         (OptimisationStrategy::UNSCHEDULE, 1),
