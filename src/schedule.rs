@@ -10,6 +10,7 @@ use std::{array, usize};
 
 use crate::constraints::constraint_store::ConstraintStore;
 use crate::hill_climber::make_small_change::SchedulableSlots;
+use crate::random::generate_sobol_indices;
 use crate::schedule::errors::ScheduleError;
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
@@ -32,6 +33,55 @@ impl Schedule {
             grid: array::from_fn(|_| array::from_fn(|_| None)),
             scheduled_constraints: HashMap::new(),
         }
+    }
+
+    /// Generates a random schedule based on the constraints provided
+    ///
+    /// Uses a Sobol sequence to generate a quasi-random ordering of constraints,
+    /// then greedily assigns each constraint to the first available slot that
+    /// satisfies its duration and slot preferences.
+    ///
+    /// # Arguments
+    ///
+    /// * `constraint_store` - Constraint store with all the constraints to schedule
+    /// * `random_seed` - Seed used to generate the Sobol sequence, controlling the
+    ///   quasi-random ordering of constraints.
+    /// * `schedule_index` - Optional offset into the Sobol sequence. Used when multiple random
+    /// schedules are generated. The schedule index helps keep each randomly generated schedule
+    /// distant from each other
+    ///
+    /// # Returns
+    ///
+    /// A [`Schedule`] with as many constraints assigned as possible given the
+    /// available slots.
+    pub fn random(
+        constraint_store: &ConstraintStore,
+        random_seed: u32,
+        schedule_index: Option<u32>,
+    ) -> Self {
+        let mut schedule = Schedule::new();
+        let number_of_constraints = constraint_store.len();
+        let indices = generate_sobol_indices(
+            number_of_constraints,
+            random_seed,
+            schedule_index.unwrap_or(0),
+        );
+
+        for index in indices {
+            let constraint = constraint_store.get_constraint_at(index);
+            // TODO: Implement a stochastic get_free_slot_for_constraint function
+            if let Some(slot) = schedule.get_free_slot_for_constraint(
+                constraint.duration,
+                &SchedulableSlots {
+                    allowed_slots: constraint.allowed_slots.clone(),
+                    preferred_slots: constraint.preferred_slots.clone(),
+                },
+            ) {
+                schedule.schedule_constraint(constraint.id, constraint.duration, &slot);
+            }
+        }
+
+        schedule
     }
 
     /// Finds a free compatible slot to schedule a constraint

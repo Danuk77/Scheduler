@@ -1,18 +1,17 @@
 pub mod change_types;
 pub mod make_small_change;
-mod optimisation_strategies; 
+mod optimisation_strategies;
 
 use std::error::Error;
 
 use crate::{
     constraints::{constraint_store::ConstraintStore, penalties::calculate_penalties},
     schedule::Schedule,
-    stats::OptimisationStats
+    stats::OptimisationStats,
 };
 use log::debug;
 use make_small_change::evolve_schedule;
 use rand::random;
-
 
 /// Runs hill climbing optimisation algorithm to generate a schedule to satisfy specified
 /// constraints

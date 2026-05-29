@@ -13,6 +13,7 @@ use log::{error, info};
 
 mod constraints;
 mod hill_climber;
+mod random;
 mod schedule;
 mod stats;
 

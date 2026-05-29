@@ -45,6 +45,14 @@ impl ConstraintStore {
         };
     }
 
+    /// Get the number of constraints stored
+    ///
+    /// # Returns
+    /// * usize - The number of constraints stored
+    pub fn len(&self) -> usize {
+        self.constraints.len()
+    }
+
     /// Add a new constraint to the store
     ///
     /// # Arguments
@@ -122,6 +130,20 @@ impl ConstraintStore {
         }
 
         Some(compatible_constriants.choose(&mut rng()).unwrap())
+    }
+
+    /// Gets the constraint stored at specific index in the underlying store
+    ///
+    /// NOTE: This is used in case for some reason the constraint needs to be retrieved based on
+    /// the constraint's physical index in the underlying vector instead by the id of it
+    ///
+    /// # Arguments
+    /// * index: The index of the constraitn
+    ///
+    /// # Returns
+    /// * &Constraint - The constraint at requested index
+    pub fn get_constraint_at(&self, index: usize) -> &Constraint {
+        &self.constraints[index]
     }
 
     /// Retrives the stored constraint given its id
