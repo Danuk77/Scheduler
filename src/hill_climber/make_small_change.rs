@@ -13,7 +13,7 @@ use crate::{
     },
     schedule::{Schedule, Slot},
 };
-use std::{collections::HashMap, error::Error};
+use std::{collections::HashMap, error::Error, thread::ScopedJoinHandle};
 
 /// Structure used for passing allowed slots and preferred slots as one
 pub struct SchedulableSlots {
@@ -80,7 +80,7 @@ fn handle_scheduled_constraint(
     constraint_store: &mut ConstraintStore,
     constraint_id: u32,
     constraint_duration: u8,
-    schedulable_slots: SchedulableSlots,
+    mut schedulable_slots: SchedulableSlots,
     schedule: &mut Schedule,
     stats: &mut OptimisationStats,
 ) -> Option<Vec<ChangeType>> {
@@ -92,9 +92,25 @@ fn handle_scheduled_constraint(
     .choose_weighted(&mut rng(), |s| s.1)
     .unwrap();
 
+    let current_slot = schedule
+        .get_scheduled_slot_for_constraint(constraint_id)
+        .unwrap();
+
     match option {
         OptimisationStrategy::MOVE => {
             stats.move_count += 1;
+            schedulable_slots.allowed_slots.as_mut().map(|slots| {
+                slots.retain(|slot| {
+                    slot.day != current_slot.day && slot.window != current_slot.window
+                })
+            });
+
+            schedulable_slots.preferred_slots.as_mut().map(|slots| {
+                slots.retain(|slot| {
+                    slot.day != current_slot.day && slot.window != current_slot.window
+                })
+            });
+
             return execute_move_strategy(
                 schedule,
                 constraint_id,

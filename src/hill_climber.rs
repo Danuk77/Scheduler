@@ -30,7 +30,8 @@ pub fn run_hill_climber(
     initial_temperature: f32,
     cooling_factor: f32,
 ) -> Result<(Schedule, u32, OptimisationStats), Box<dyn Error>> {
-    let mut schedule = Schedule::new();
+    //let mut schedule = Schedule::new();
+    let mut schedule = Schedule::random(constraints, 0, None);
     let (mut penalties, mut total_penalty) = calculate_penalties(constraints, &schedule);
     let mut temperature = initial_temperature;
     let mut stagnant_counter = 0;
@@ -41,6 +42,11 @@ pub fn run_hill_climber(
 
     for iteration in 0..iterations {
         debug!("Running iteration number {:?}", iteration);
+
+        if total_penalty == 0{
+           break; 
+        }
+
         temperature *= cooling_factor;
 
         let Some(changes) = evolve_schedule(constraints, &penalties, &mut schedule, &mut stats)?

@@ -81,15 +81,16 @@ impl ConstraintStore {
         if self.constraints.is_empty() {
             return Err(ConstraintStoreError::EmptyStore);
         }
-
-        // NOTE: Alternate
-        //self.constraints.choose(&mut rng())
-
         self.constraints
-            .choose_weighted(&mut rng(), |c| {
-                *penalties.get(&c.id).expect("Error: encountered inconsistent constraint ids between penalty calculation and constraint store")
+        .choose_weighted(&mut rng(), |c| {
+            *penalties.get(&c.id).unwrap_or_else(|| {
+                panic!(
+                    "Error: encountered inconsistent constraint id ({:?}) between penalty calculation and constraint store",
+                    c.id
+                )
             })
-            .map_err(|_| ConstraintStoreError::SelectionError)
+        })
+        .map_err(|_| ConstraintStoreError::SelectionError)
     }
 
     /// Finds a stored scheduled constraint that is compatible to be swapped with a given duration
