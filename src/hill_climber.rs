@@ -18,6 +18,7 @@ use rand::random;
 ///
 /// # Arguments
 /// * `constraints` - The constraints store containing all the constraints to satisfy
+/// * `initial_schedule` - The initial schedule to start the algorithm with
 /// * `iterations` - The number of iterations to run the optimisation algorithm for
 /// * `temperature` - The initial temperature to run the hill climber with
 /// * `cooling_factor` - The cooling factor for the temperature
@@ -26,12 +27,12 @@ use rand::random;
 /// * Schedule - The output of the optimisation algorithm
 pub fn run_hill_climber(
     constraints: &mut ConstraintStore,
+    initial_schedule: Schedule,
     iterations: u32,
     initial_temperature: f32,
     cooling_factor: f32,
 ) -> Result<(Schedule, u32, OptimisationStats), Box<dyn Error>> {
-    //let mut schedule = Schedule::new();
-    let mut schedule = Schedule::random(constraints, 0, None);
+    let mut schedule = initial_schedule;
     let (mut penalties, mut total_penalty) = calculate_penalties(constraints, &schedule);
     let mut temperature = initial_temperature;
     let mut stagnant_counter = 0;
@@ -43,8 +44,8 @@ pub fn run_hill_climber(
     for iteration in 0..iterations {
         debug!("Running iteration number {:?}", iteration);
 
-        if total_penalty == 0{
-           break; 
+        if total_penalty == 0 {
+            break;
         }
 
         temperature *= cooling_factor;

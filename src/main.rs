@@ -5,13 +5,14 @@ use crate::{
         constraint_store::{ConstraintStore, load_constraint_store_from_file},
         penalties::print_penalty_report,
     },
-    hill_climber::run_hill_climber,
+    global_search::run_global_search,
 };
 use anyhow::Result;
 use env_logger;
 use log::{error, info};
 
 mod constraints;
+mod global_search;
 mod hill_climber;
 mod random;
 mod schedule;
@@ -26,15 +27,13 @@ fn main() -> Result<()> {
             .expect("Could not load constraints from file. Please ensure the file exists");
     info!("Initalised constraint store");
 
-    info!("Running hill climber algorithm");
-    // TODO: Refactor the name of the algorithm from hill climber to something else
     let (schedule, total_incurred_penalty, stats) =
-        run_hill_climber(&mut constraints, 100000, 200.0, 0.9999).unwrap_or_else(|error| {
-            error!("{}", error);
-            panic!();
-        });
-
-    info!("Finished hill climber");
+        run_global_search(&mut constraints, 100000, 200.0, 0.9999, 5, 123).unwrap_or_else(
+            |error| {
+                error!("{}", error);
+                panic!();
+            },
+        );
 
     info!("Exporting schedule");
     schedule
