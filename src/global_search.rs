@@ -25,6 +25,27 @@ impl fmt::Display for GlobalSearchError {
 
 type HillClimbResult = (Schedule, u32, OptimisationStats);
 
+/// Runs a global search algorithm to find the optimum schedule for the specified constraints
+///
+/// Runs a specified number of local searches in parallel and returns the best result
+/// Each local search starts with an initial schedule that is seeded using quasi randomly
+///
+/// Each local search is a simulated annealing algorithm with restarts upon reaching local minima
+///
+/// # Arguments
+/// * constraints (&mut ConstraintStore) - The constraint store containing the constraints to
+/// schedule
+/// * iterations (u32) - The number of iteration to run each local search for
+/// * initial_temperature (f32) - The starting temperature of each local search
+/// * cooling_factore (f32) - The cooling temperature for each local search
+/// * number_of_parallel_searches (u32) - The number of parallel local searches to run
+/// * random_seed (u32) - The random seed used for the quasi random generator
+///
+/// # Returns
+/// * (Schedule, u32, OptimisationStats) - The idenfied best (schedule, its penalty,
+/// optimisation_statistics)
+/// * GlobalSearchError - Error if it was not possible to successfully complete a single local
+/// search
 pub fn run_global_search(
     constraints: &mut ConstraintStore,
     iterations: u32,

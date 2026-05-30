@@ -28,7 +28,7 @@ fn main() -> Result<()> {
     info!("Initalised constraint store");
 
     let (schedule, total_incurred_penalty, stats) =
-        run_global_search(&mut constraints, 100000, 200.0, 0.9999, 5, 123).unwrap_or_else(
+        run_global_search(&mut constraints, 100000, 200.0, 0.9999, 10, 123).unwrap_or_else(
             |error| {
                 error!("{}", error);
                 panic!();
