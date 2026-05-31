@@ -1,6 +1,7 @@
 pub mod errors;
 
 use csv::Writer;
+use log::info;
 use rand::seq::IteratorRandom;
 use rand::{Rng, rng};
 use serde::{Deserialize, Serialize};
@@ -390,6 +391,7 @@ impl Schedule {
         file_name: String,
         constraint_store: &ConstraintStore,
     ) -> Result<(), Box<dyn Error>> {
+        info!("Exporting schedule to csv ({:?})", file_name);
         let mut csv_writer = Writer::from_path(file_name)?;
         csv_writer.write_record(&[
             "Monday",
@@ -416,7 +418,7 @@ impl Schedule {
         }
 
         csv_writer.flush()?;
-
+        info!("Exported schedule to csv");
         Ok(())
     }
 }

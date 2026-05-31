@@ -13,7 +13,7 @@ use crate::{
     },
     schedule::{Schedule, Slot},
 };
-use std::{collections::HashMap, error::Error, thread::ScopedJoinHandle};
+use std::{collections::HashMap, error::Error};
 
 /// Structure used for passing allowed slots and preferred slots as one
 pub struct SchedulableSlots {

@@ -1,0 +1,8 @@
+iterations = 1
+number_of_global_searches = 10
+constraint_file_path = "./constraints.json"
+initial_temperature = 200.0
+cooling_factor = 0.999
+random_seed = 12221
+output_path = "./schedule.csv"
+debug = true
