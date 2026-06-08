@@ -5,6 +5,7 @@ mod optimisation_strategies;
 use std::error::Error;
 
 use crate::{
+    config::{OptimisationStrategyConfig, PenaltiesConfig},
     constraints::{constraint_store::ConstraintStore, penalties::calculate_penalties},
     schedule::Schedule,
     stats::OptimisationStats,
@@ -22,6 +23,10 @@ use rand::random;
 /// * `iterations` - The number of iterations to run the optimisation algorithm for
 /// * `temperature` - The initial temperature to run the hill climber with
 /// * `cooling_factor` - The cooling factor for the temperature
+/// * `penalties_config (&PenaltiesConfig)` - The configuration specifying values used for penalties
+///     during optimisation
+/// * `optimisation_strategy_config (OptimisationStrategyConfig)` - The configuration speciifying
+///     chances used in choosing optimisation strategy
 ///
 /// # Returns
 /// * Schedule - The output of the optimisation algorithm
@@ -31,9 +36,12 @@ pub fn run_hill_climber(
     iterations: u32,
     initial_temperature: f32,
     cooling_factor: f32,
+    penalties_config: &PenaltiesConfig,
+    optimisation_strategy_config: &OptimisationStrategyConfig,
 ) -> Result<(Schedule, u32, OptimisationStats), Box<dyn Error>> {
     let mut schedule = initial_schedule;
-    let (mut penalties, mut total_penalty) = calculate_penalties(constraints, &schedule);
+    let (mut penalties, mut total_penalty) =
+        calculate_penalties(constraints, &schedule, penalties_config);
     let mut temperature = initial_temperature;
     let mut stagnant_counter = 0;
     let mut stats = OptimisationStats::default();
@@ -50,7 +58,13 @@ pub fn run_hill_climber(
 
         temperature *= cooling_factor;
 
-        let Some(changes) = evolve_schedule(constraints, &penalties, &mut schedule, &mut stats)?
+        let Some(changes) = evolve_schedule(
+            constraints,
+            &penalties,
+            &mut schedule,
+            &mut stats,
+            optimisation_strategy_config,
+        )?
         else {
             debug!(
                 "Did not find optimisation schedule at iteration {:?}",
@@ -60,7 +74,8 @@ pub fn run_hill_climber(
             continue;
         };
 
-        let (new_penalties, new_total_penalty) = calculate_penalties(constraints, &schedule);
+        let (new_penalties, new_total_penalty) =
+            calculate_penalties(constraints, &schedule, penalties_config);
         debug!("Evaluated penalty. Penalty: {:?}", new_total_penalty);
 
         if !_should_accept_schedule(new_total_penalty, total_penalty, temperature) {

@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    config::PenaltiesConfig,
     constraints::{
         constraint_store::ConstraintStore,
         penalties::{
-            calculate_allowed_slots_based_penalty, calculate_gap_based_penalty,
+            PenaltyConfig, calculate_allowed_slots_based_penalty, calculate_gap_based_penalty,
             calculate_preferred_slots_based_penalty, calculate_presence_based_penalty,
         },
         penalty::Penalty,
@@ -59,22 +60,52 @@ impl Constraint {
         &self,
         schedule: &Schedule,
         constraint_store: &ConstraintStore,
+        penalties_config: &PenaltiesConfig,
     ) -> u32 {
         let mut total_penalty: u32 = 0;
 
         for penalty in &self.penalties {
             match penalty {
                 Penalty::Presence => {
-                    total_penalty += calculate_presence_based_penalty(self, schedule)
+                    total_penalty += calculate_presence_based_penalty(
+                        self,
+                        schedule,
+                        &PenaltyConfig {
+                            high_priority_penalty: penalties_config.presence_high,
+                            low_priority_penalty: penalties_config.presence_low,
+                        },
+                    )
                 }
                 Penalty::AllowedSlots => {
-                    total_penalty += calculate_allowed_slots_based_penalty(self, schedule)
+                    total_penalty += calculate_allowed_slots_based_penalty(
+                        self,
+                        schedule,
+                        &PenaltyConfig {
+                            high_priority_penalty: penalties_config.allowed_slots_high,
+                            low_priority_penalty: penalties_config.allowed_slots_low,
+                        },
+                    )
                 }
                 Penalty::PreferredSlots => {
-                    total_penalty += calculate_preferred_slots_based_penalty(self, schedule)
+                    total_penalty += calculate_preferred_slots_based_penalty(
+                        self,
+                        schedule,
+                        &PenaltyConfig {
+                            high_priority_penalty: penalties_config.preferred_slots_high,
+                            low_priority_penalty: penalties_config.preferred_slots_low,
+                        },
+                    )
                 }
                 Penalty::Gap => {
-                    total_penalty += calculate_gap_based_penalty(self, schedule, constraint_store)
+                    total_penalty += calculate_gap_based_penalty(
+                        self,
+                        schedule,
+                        constraint_store,
+                        &PenaltyConfig {
+                            high_priority_penalty: penalties_config.gap_high,
+                            low_priority_penalty: penalties_config.gap_low,
+                        },
+                    )
                 }
             }
         }
@@ -99,6 +130,7 @@ impl Constraint {
         &self,
         schedule: &Schedule,
         constraint_store: &ConstraintStore,
+        penalties_config: &PenaltiesConfig,
     ) -> Vec<(Penalty, u32)> {
         let mut penalties: Vec<(Penalty, u32)> = Vec::new();
 
@@ -106,19 +138,48 @@ impl Constraint {
             match penalty {
                 Penalty::Presence => penalties.push((
                     Penalty::Presence,
-                    calculate_presence_based_penalty(self, schedule),
+                    calculate_presence_based_penalty(
+                        self,
+                        schedule,
+                        &PenaltyConfig {
+                            high_priority_penalty: penalties_config.presence_high,
+                            low_priority_penalty: penalties_config.presence_low,
+                        },
+                    ),
                 )),
                 Penalty::AllowedSlots => penalties.push((
                     Penalty::AllowedSlots,
-                    calculate_allowed_slots_based_penalty(self, schedule),
+                    calculate_allowed_slots_based_penalty(
+                        self,
+                        schedule,
+                        &PenaltyConfig {
+                            high_priority_penalty: penalties_config.allowed_slots_high,
+                            low_priority_penalty: penalties_config.allowed_slots_low,
+                        },
+                    ),
                 )),
                 Penalty::PreferredSlots => penalties.push((
                     Penalty::PreferredSlots,
-                    calculate_preferred_slots_based_penalty(self, schedule),
+                    calculate_preferred_slots_based_penalty(
+                        self,
+                        schedule,
+                        &PenaltyConfig {
+                            high_priority_penalty: penalties_config.preferred_slots_high,
+                            low_priority_penalty: penalties_config.preferred_slots_low,
+                        },
+                    ),
                 )),
                 Penalty::Gap => penalties.push((
                     Penalty::Gap,
-                    calculate_gap_based_penalty(self, schedule, constraint_store),
+                    calculate_gap_based_penalty(
+                        self,
+                        schedule,
+                        constraint_store,
+                        &PenaltyConfig {
+                            high_priority_penalty: penalties_config.gap_high,
+                            low_priority_penalty: penalties_config.gap_low,
+                        },
+                    ),
                 )),
             }
         }

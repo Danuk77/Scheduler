@@ -1,0 +1,23 @@
+iterations = 100000
+number_of_global_searches = 10
+constraint_file_path = "./constraints.json"
+initial_temperature = 200.0
+cooling_factor = 0.999
+random_seed = 12221
+output_path = "./schedule.csv"
+debug = true
+
+[penalties_config]
+presence_high = 10
+presence_low = 5
+allowed_slots_high = 30
+allowed_slots_low = 20
+preferred_slots_high = 3
+preferred_slots_low = 2
+gap_high = 3
+gap_low = 2
+
+[optimisation_strategy_config]
+move_chance = 3
+unschedule_chance = 1
+swap_chance = 1

@@ -3,9 +3,15 @@ use std::collections::HashMap;
 use log::info;
 
 use crate::{
+    config::PenaltiesConfig,
     constraints::{Constraint, constraint_store::ConstraintStore, penalty::Penalty},
     schedule::{Schedule, Slot},
 };
+
+pub struct PenaltyConfig {
+    pub high_priority_penalty: u32,
+    pub low_priority_penalty: u32,
+}
 
 /// Calculates the penalties for a set of constraints under a certain schedule
 ///
@@ -29,11 +35,13 @@ use crate::{
 pub fn calculate_detailed_penalties(
     constraints: &ConstraintStore,
     schedule: &Schedule,
+    penalties_config: &PenaltiesConfig,
 ) -> HashMap<u32, Vec<(Penalty, u32)>> {
     let mut penalties: HashMap<u32, Vec<(Penalty, u32)>> = HashMap::new();
 
     for constraint in constraints.into_iter() {
-        let constraint_penalty = constraint.calculate_detailed_penalty(schedule, constraints);
+        let constraint_penalty =
+            constraint.calculate_detailed_penalty(schedule, constraints, penalties_config);
         penalties.insert(constraint.id, constraint_penalty);
     }
 
@@ -45,6 +53,8 @@ pub fn calculate_detailed_penalties(
 /// # Arguments
 /// * `constraints` - The constraints to evaluate the penalties for
 /// * `schedule` - The schedule to evaluate the constraints for penalties under
+/// * `penalty_config` - The configuration containing the penalty value applied for each type of
+///     penalty
 ///
 /// # Returns
 /// (
@@ -55,12 +65,14 @@ pub fn calculate_detailed_penalties(
 pub fn calculate_penalties(
     constraints: &ConstraintStore,
     schedule: &Schedule,
+    penalties_config: &PenaltiesConfig,
 ) -> (HashMap<u32, u32>, u32) {
     let mut penalties: HashMap<u32, u32> = HashMap::new();
     let mut total_penalty = 0;
 
     for constraint in constraints.into_iter() {
-        let constraint_penalty = constraint.calculate_penalty(schedule, constraints);
+        let constraint_penalty =
+            constraint.calculate_penalty(schedule, constraints, &penalties_config);
         penalties.insert(constraint.id, constraint_penalty);
         total_penalty += constraint_penalty;
     }
@@ -76,11 +88,15 @@ pub fn calculate_penalties(
 ///
 /// # Returns
 /// `u32` - The calculated penalty for constraint
-pub fn calculate_presence_based_penalty(constraint: &Constraint, schedule: &Schedule) -> u32 {
+pub fn calculate_presence_based_penalty(
+    constraint: &Constraint,
+    schedule: &Schedule,
+    penalty_config: &PenaltyConfig,
+) -> u32 {
     if !schedule.is_constraint_scheduled(constraint.id) {
         match constraint.priority {
-            super::ConstraintPriority::High => return 10,
-            super::ConstraintPriority::Low => return 5,
+            super::ConstraintPriority::High => return penalty_config.high_priority_penalty,
+            super::ConstraintPriority::Low => return penalty_config.low_priority_penalty,
         }
     }
 
@@ -98,7 +114,11 @@ pub fn calculate_presence_based_penalty(constraint: &Constraint, schedule: &Sche
 ///
 /// # Returns
 /// * `u32` - The calculated penalty
-pub fn calculate_allowed_slots_based_penalty(constraint: &Constraint, schedule: &Schedule) -> u32 {
+pub fn calculate_allowed_slots_based_penalty(
+    constraint: &Constraint,
+    schedule: &Schedule,
+    penalty_config: &PenaltyConfig,
+) -> u32 {
     // NOTE: If it isnt scheduled, the validity based penalty will be applied and we are not going
     // to apply the allowed slots based penalty again
     let Some(scheduled_slot) = schedule.get_scheduled_slot_for_constraint(constraint.id) else {
@@ -112,8 +132,8 @@ pub fn calculate_allowed_slots_based_penalty(constraint: &Constraint, schedule: 
 
     if !allowed_slots.contains(scheduled_slot) {
         match constraint.priority {
-            super::ConstraintPriority::High => return 30,
-            super::ConstraintPriority::Low => return 20,
+            super::ConstraintPriority::High => return penalty_config.high_priority_penalty,
+            super::ConstraintPriority::Low => return penalty_config.low_priority_penalty,
         }
     }
 
@@ -134,6 +154,7 @@ pub fn calculate_allowed_slots_based_penalty(constraint: &Constraint, schedule: 
 pub fn calculate_preferred_slots_based_penalty(
     constraint: &Constraint,
     schedule: &Schedule,
+    penalty_config: &PenaltyConfig,
 ) -> u32 {
     // NOTE: If it isnt scheduled, the validity based penalty will be applied and we are not going
     // to apply the allowed slots based penalty again
@@ -148,8 +169,8 @@ pub fn calculate_preferred_slots_based_penalty(
 
     if !preferred_slots.contains(scheduled_slot) {
         match constraint.priority {
-            super::ConstraintPriority::High => return 3,
-            super::ConstraintPriority::Low => return 2,
+            super::ConstraintPriority::High => return penalty_config.high_priority_penalty,
+            super::ConstraintPriority::Low => return penalty_config.low_priority_penalty,
         }
     }
 
@@ -172,10 +193,12 @@ pub fn calculate_preferred_slots_based_penalty(
 /// # Panics
 /// * Panics if the `constraint` does not have a defined `gap` value.
 /// * Panics if a matching constraint is marked as scheduled but its slot cannot be retrieved.
+// TODO: This is wrong, we need to refactor the gap based penalty calculation
 pub fn calculate_gap_based_penalty(
     constraint: &Constraint,
     schedule: &Schedule,
     constraint_store: &ConstraintStore,
+    penalty_config: &PenaltyConfig,
 ) -> u32 {
     // NOTE: If the constraint is not scheduled then we do not calculate the gap based penalty
     if !schedule.is_constraint_scheduled(constraint.id) {
@@ -198,9 +221,11 @@ pub fn calculate_gap_based_penalty(
                 .unwrap(),
         );
 
-        // TODO: Change based on constraint priority
         if gap < constraint.gap.expect("Unexpected call calculating gap based penalty when no gap was specified for constraint") {
-            return 3;
+            match constraint.priority{
+                super::ConstraintPriority::High => return penalty_config.high_priority_penalty,
+                super::ConstraintPriority::Low => return penalty_config.low_priority_penalty
+            }
         }
     }
 
@@ -244,8 +269,9 @@ pub fn print_penalty_report(
     constraints: &ConstraintStore,
     schedule: &Schedule,
     total_incurred_penalty: u32,
+    penalties_config: &PenaltiesConfig,
 ) {
-    let penalties = calculate_detailed_penalties(constraints, schedule);
+    let penalties = calculate_detailed_penalties(constraints, schedule, penalties_config);
 
     // Header - Minimalist and wide-screen friendly
     info!("=== PENALTY REPORT SUMMARY ===");

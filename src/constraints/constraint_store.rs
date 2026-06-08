@@ -262,7 +262,7 @@ impl fmt::Debug for ConstraintStore {
 /// returns the store
 ///
 /// # Arguments
-/// * `file_name` - The name of the json file containing the serialized constraints store (excludes
+/// * `file_name` - The name of the json file containing the serialized constraints store (include
 /// the .json suffix)
 ///
 /// # Returns
@@ -272,7 +272,9 @@ impl fmt::Debug for ConstraintStore {
 pub fn load_constraint_store_from_file(
     file_name: String,
 ) -> Result<ConstraintStore, Box<dyn Error>> {
-    let json_reader = File::open(format!("{}.json", file_name))?;
+    info!("Loading constraints from file ({:?})", file_name);
+    let json_reader = File::open(format!("{}", file_name))?;
     let constraints: ConstraintStore = serde_json::from_reader(json_reader)?;
+    info!("Loaded constraints from file");
     Ok(constraints)
 }
