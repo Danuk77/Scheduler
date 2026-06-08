@@ -4,8 +4,8 @@ use log::{error, info};
 use rayon::prelude::*;
 
 use crate::{
-    constraints::constraint_store::ConstraintStore, hill_climber::run_hill_climber,
-    schedule::Schedule, stats::OptimisationStats,
+    config::{OptimisationStrategyConfig, PenaltiesConfig}, constraints::constraint_store::ConstraintStore,
+    hill_climber::run_hill_climber, schedule::Schedule, stats::OptimisationStats,
 };
 
 #[derive(Debug)]
@@ -33,13 +33,17 @@ type HillClimbResult = (Schedule, u32, OptimisationStats);
 /// Each local search is a simulated annealing algorithm with restarts upon reaching local minima
 ///
 /// # Arguments
-/// * constraints (&mut ConstraintStore) - The constraint store containing the constraints to
+/// * `constraints` (&mut ConstraintStore) - The constraint store containing the constraints to
 /// schedule
-/// * iterations (u32) - The number of iteration to run each local search for
-/// * initial_temperature (f32) - The starting temperature of each local search
-/// * cooling_factore (f32) - The cooling temperature for each local search
-/// * number_of_parallel_searches (u32) - The number of parallel local searches to run
-/// * random_seed (u32) - The random seed used for the quasi random generator
+/// * `iterations` (u32) - The number of iteration to run each local search for
+/// * `initial_temperature` (f32) - The starting temperature of each local search
+/// * `cooling_factore` (f32) - The cooling temperature for each local search
+/// * `number_of_parallel_searches` (u32) - The number of parallel local searches to run
+/// * `random_seed` (u32) - The random seed used for the quasi random generator
+/// * `penalties_config (&PenaltiesConfig)` - The configuration specifying values used for penalties
+///     during optimisation
+/// * `optimisation_strategy_config (OptimisationStrategyConfig)` - The configuration speciifying
+///     chances used in choosing optimisation strategy
 ///
 /// # Returns
 /// * (Schedule, u32, OptimisationStats) - The idenfied best (schedule, its penalty,
@@ -53,6 +57,8 @@ pub fn run_global_search(
     cooling_factor: f32,
     number_of_parallel_searches: u32,
     random_seed: u32,
+    penalties_config: &PenaltiesConfig,
+    optimisation_strategy_config: &OptimisationStrategyConfig
 ) -> Result<HillClimbResult, GlobalSearchError> {
     (0..number_of_parallel_searches)
         .into_par_iter()
@@ -65,6 +71,8 @@ pub fn run_global_search(
                 iterations,
                 initial_temperature,
                 cooling_factor,
+                penalties_config,
+                optimisation_strategy_config
             )
             .inspect_err(|error| {
                 info!(

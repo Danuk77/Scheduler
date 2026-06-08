@@ -10,7 +10,7 @@ use crate::{
 };
 use anyhow::Result;
 use env_logger;
-use log::error;
+use log::{error, info};
 
 mod config;
 mod constraints;
@@ -23,6 +23,7 @@ mod stats;
 fn main() -> Result<()> {
     env_logger::init();
     let config = Config::new()?;
+    info!("{:?}", config.optimisation_strategy_config);
 
     let mut constraints: ConstraintStore =
         load_constraint_store_from_file(config.constraint_file_path)
@@ -35,6 +36,8 @@ fn main() -> Result<()> {
         config.cooling_factor,
         config.number_of_global_searches,
         config.random_seed,
+        &config.penalties_config,
+        &config.optimisation_strategy_config
     )
     .unwrap_or_else(|error| {
         error!("{}", error);
@@ -47,7 +50,12 @@ fn main() -> Result<()> {
 
     stats.generate_optimisation_report();
     constraints.print_schedule_report(&schedule, total_incurred_penalty);
-    print_penalty_report(&constraints, &schedule, total_incurred_penalty);
+    print_penalty_report(
+        &constraints,
+        &schedule,
+        total_incurred_penalty,
+        &config.penalties_config,
+    );
 
     Ok(())
 }

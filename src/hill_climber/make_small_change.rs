@@ -2,6 +2,7 @@ use log::debug;
 use rand::{rng, seq::IndexedRandom};
 
 use crate::{
+    config::OptimisationStrategyConfig,
     constraints::constraint_store::ConstraintStore,
     hill_climber::{
         OptimisationStats,
@@ -27,6 +28,8 @@ pub struct SchedulableSlots {
 ///  * `constraints` - The constraints store containing all constraints
 ///  * `incurred_penalties` - The penalties incurred by the constraints under the specified schedule
 ///  * `Schedule` - The current state of the schedule
+///  * `optimisation_strategy_config (OptimisationStrategyConfig)` - The configuration speciifying
+///     chances used in choosing optimisation strategy
 ///
 ///  # Returns
 ///  `ChangeType` - The type of change made if the state of the schedule is changed
@@ -36,6 +39,7 @@ pub fn evolve_schedule(
     incurred_penalties: &HashMap<u32, u32>,
     schedule: &mut Schedule,
     stats: &mut OptimisationStats,
+    optimisation_strategy_config: &OptimisationStrategyConfig,
 ) -> Result<Option<Vec<ChangeType>>, Box<dyn Error>> {
     let constraint = constraints.get_constraint_for_optimisation(incurred_penalties)?;
 
@@ -55,6 +59,7 @@ pub fn evolve_schedule(
             schedulabe_slots_for_constraint,
             schedule,
             stats,
+            optimisation_strategy_config,
         ));
     } else {
         return Ok(handle_unscheduled_constraint(
@@ -72,6 +77,8 @@ pub fn evolve_schedule(
 /// # Arguments
 /// * constraint - The constraint to optimise
 /// * schedule - The current state of the schedule
+/// * `optimisation_strategy_config (OptimisationStrategyConfig)` - The configuration speciifying
+///     chances used in choosing optimisation strategy
 ///
 /// # Returns
 /// * Vec<ChangeType> - A vector containing all the changes performed (in order)
@@ -83,14 +90,23 @@ fn handle_scheduled_constraint(
     mut schedulable_slots: SchedulableSlots,
     schedule: &mut Schedule,
     stats: &mut OptimisationStats,
+    optimisation_strategy_config: &OptimisationStrategyConfig,
 ) -> Option<Vec<ChangeType>> {
-    let (option, _) = [
-        (OptimisationStrategy::MOVE, 3),
-        (OptimisationStrategy::UNSCHEDULE, 1),
-        (OptimisationStrategy::SWAP, 1),
-    ]
-    .choose_weighted(&mut rng(), |s| s.1)
-    .unwrap();
+    let strategies = [
+        (
+            OptimisationStrategy::MOVE,
+            &optimisation_strategy_config.move_chance,
+        ),
+        (
+            OptimisationStrategy::UNSCHEDULE,
+            &optimisation_strategy_config.unschedule_chance,
+        ),
+        (
+            OptimisationStrategy::SWAP,
+            &optimisation_strategy_config.swap_chance,
+        ),
+    ];
+    let (option, _) = strategies.choose_weighted(&mut rng(), |s| s.1).unwrap();
 
     let current_slot = schedule
         .get_scheduled_slot_for_constraint(constraint_id)
