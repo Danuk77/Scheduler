@@ -8,12 +8,25 @@ use ratatui::{
     prelude::Backend,
 };
 
-pub struct App {}
+use crate::{
+    config::Config,
+    constraints::constraint_store::{ConstraintStore, load_constraint_store_from_file},
+};
+
+pub struct App {
+    pub constraint_store: ConstraintStore,
+    pub config: Config,
+}
 
 // TODO: Add docstrings
 impl App {
     pub fn new() -> Result<App> {
-        Ok(App {})
+        let config = Config::new()?;
+        Ok(App {
+            constraint_store: load_constraint_store_from_file(&config.constraint_file_path)
+                .expect("Could not load constraints from file. Please ensure the file exists"),
+            config: config,
+        })
     }
 
     pub fn run<B: Backend>(self: &mut Self, terminal: &mut Terminal<B>) -> Result<(), String> {

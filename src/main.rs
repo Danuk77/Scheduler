@@ -1,24 +1,10 @@
-// use core::panic;
-//
-// use crate::{
-//     config::Config,
-//     constraints::{
-//         constraint_store::{ConstraintStore, load_constraint_store_from_file},
-//         penalties::print_penalty_report,
-//     },
-//     global_search::run_global_search,
-// };
-// use anyhow::Result;
-// use env_logger;
-// use log::{error, info};
-//
-// mod config;
-// mod constraints;
-// mod global_search;
-// mod hill_climber;
-// mod random;
-// mod schedule;
-// mod stats;
+mod config;
+mod constraints;
+mod global_search;
+mod hill_climber;
+mod random;
+mod schedule;
+mod stats;
 //
 // fn main() -> Result<()> {
 //     env_logger::init();
@@ -66,6 +52,7 @@ mod terminal;
 use crate::app::App;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
     let mut terminal = terminal::setup_terminal()?;
     let mut app = App::new()?;
     app.run(&mut terminal)?;

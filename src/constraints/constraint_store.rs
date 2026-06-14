@@ -270,7 +270,7 @@ impl fmt::Debug for ConstraintStore {
 /// * `io::Error` - If failed to open file with the given name
 /// * `Error` - If cannot deserialize the contents of the json file into a constraint store
 pub fn load_constraint_store_from_file(
-    file_name: String,
+    file_name: &String,
 ) -> Result<ConstraintStore, Box<dyn Error>> {
     info!("Loading constraints from file ({:?})", file_name);
     let json_reader = File::open(format!("{}", file_name))?;

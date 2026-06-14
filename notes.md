@@ -13,6 +13,9 @@
 * Algorithm optimisations to make it run faster
 * A way to make the days more balanced. It should avoid scheduling everything for instance on a Tuesday and nothing on a Sunday and instead should balance the days
 
+## Other
+* A way to select how to load in the constraints
+
 ## UI
 * Given a manually set schedule, a way to list out what constraints it is breaking
 
