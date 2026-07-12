@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
+use std::fmt::write;
 use std::fs::File;
 
 use crate::{constraints::Constraint, schedule::Schedule};
@@ -20,6 +21,7 @@ pub struct ConstraintStore {
 pub enum ConstraintStoreError {
     EmptyStore,
     SelectionError,
+    InvalidConstraintIdError,
 }
 
 impl fmt::Display for ConstraintStoreError {
@@ -30,6 +32,9 @@ impl fmt::Display for ConstraintStoreError {
             }
             ConstraintStoreError::SelectionError => {
                 write!(f, "Error selecting constraint from store")
+            }
+            ConstraintStoreError::InvalidConstraintIdError => {
+                write!(f, "No constraint exists for the specified id")
             }
         }
     }
@@ -145,6 +150,13 @@ impl ConstraintStore {
     /// * &Constraint - The constraint at requested index
     pub fn get_constraint_at(&self, index: usize) -> &Constraint {
         &self.constraints[index]
+    }
+
+    pub fn get_constraint_name(&self, constraint_id: u32) -> Result<String, ConstraintStoreError> {
+        let constraint = &self
+            .get_constraint(constraint_id)
+            .ok_or(ConstraintStoreError::InvalidConstraintIdError)?;
+        Ok(constraint.name.clone())
     }
 
     /// Retrives the stored constraint given its id
