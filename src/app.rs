@@ -3,7 +3,7 @@ use std::{result::Result::Ok, time::Duration};
 use anyhow::Result;
 use ratatui::{
     Terminal,
-    crossterm::event::{self, Event, KeyCode},
+    crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
     prelude::Backend,
 };
 
@@ -52,23 +52,31 @@ impl App {
                 })
                 .map_err(|e| e.to_string())?;
 
-            match self._get_user_input() {
-                Some(KeyCode::Char('q')) => {
-                    break;
+            if let Some(key_event) = self._get_user_input() {
+                match (key_event.code, key_event.modifiers) {
+                    (KeyCode::Char('q'), KeyModifiers::NONE) => {
+                        break;
+                    }
+                    (KeyCode::Char('j'), KeyModifiers::NONE) => {
+                        self.ui_state.schedule_table_state.select_next();
+                    }
+                    (KeyCode::Char('k'), KeyModifiers::NONE) => {
+                        self.ui_state.schedule_table_state.select_previous();
+                    }
+                    (KeyCode::Char('h'), KeyModifiers::NONE) => {
+                        self.ui_state.schedule_table_state.select_previous_column();
+                    }
+                    (KeyCode::Char('l'), KeyModifiers::NONE) => {
+                        self.ui_state.schedule_table_state.select_next_column();
+                    }
+                    (KeyCode::Char('d'), KeyModifiers::CONTROL) => {
+                        self.ui_state.schedule_table_state.scroll_down_by(10);
+                    }
+                    (KeyCode::Char('u'), KeyModifiers::CONTROL) => {
+                        self.ui_state.schedule_table_state.scroll_up_by(10);
+                    }
+                    _ => {}
                 }
-                Some(KeyCode::Char('j')) => {
-                    self.ui_state.schedule_table_state.select_next();
-                }
-                Some(KeyCode::Char('k')) => {
-                    self.ui_state.schedule_table_state.select_previous();
-                }
-                Some(KeyCode::Char('h')) => {
-                    self.ui_state.schedule_table_state.select_previous_column();
-                }
-                Some(KeyCode::Char('l')) => {
-                    self.ui_state.schedule_table_state.select_next_column();
-                }
-                _ => {}
             }
         }
 
@@ -76,11 +84,11 @@ impl App {
     }
 
     /// TODO: Add docstring
-    pub fn _get_user_input(&self) -> Option<KeyCode> {
+    pub fn _get_user_input(&self) -> Option<KeyEvent> {
         if let Ok(true) = event::poll(Duration::from_millis(100)) {
             if let Ok(Event::Key(key)) = event::read() {
                 if key.kind == event::KeyEventKind::Press {
-                    return Some(key.code);
+                    return Some(key);
                 }
             }
         }
