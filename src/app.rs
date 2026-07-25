@@ -11,7 +11,10 @@ use crate::{
     config::Config,
     constraints::constraint_store::{ConstraintStore, load_constraint_store_from_file},
     schedule::Schedule,
-    ui::{UiState, layout::create_app_layout, schedule::render_schedule},
+    ui::{
+        Pane, UiState, algorithm::render_algorithm_stats, constraints::render_constraints,
+        layout::create_app_layout, schedule::render_schedule, tooltip::render_tooltip,
+    },
 };
 
 pub struct App {
@@ -41,14 +44,17 @@ impl App {
         loop {
             terminal
                 .draw(|frame| {
-                    let [schedule_block, _] = create_app_layout(frame);
+                    let layout = create_app_layout(frame);
                     render_schedule(
                         &mut self.schedule,
                         frame,
-                        &schedule_block,
+                        &layout.schedule_block,
                         &mut self.ui_state.schedule_table_state,
                         &self.constraint_store,
                     );
+                    render_tooltip(Pane::Schedule, frame, &layout.tooltip_block);
+                    render_algorithm_stats(frame, &layout.schedule_fitness_block);
+                    render_constraints(frame, &layout.constraints_block);
                 })
                 .map_err(|e| e.to_string())?;
 
@@ -70,10 +76,10 @@ impl App {
                         self.ui_state.schedule_table_state.select_next_column();
                     }
                     (KeyCode::Char('d'), KeyModifiers::CONTROL) => {
-                        self.ui_state.schedule_table_state.scroll_down_by(10);
+                        self.ui_state.schedule_table_state.scroll_down_by(15);
                     }
                     (KeyCode::Char('u'), KeyModifiers::CONTROL) => {
-                        self.ui_state.schedule_table_state.scroll_up_by(10);
+                        self.ui_state.schedule_table_state.scroll_up_by(15);
                     }
                     _ => {}
                 }

@@ -3,6 +3,15 @@ use ratatui::widgets::TableState;
 pub mod components;
 pub mod layout;
 pub mod schedule;
+pub mod tooltip;
+pub mod algorithm;
+pub mod constraints;
+
+pub enum Pane {
+    Schedule,
+    AlgorithmStats,
+    Constraints,
+}
 
 pub struct UiState {
     pub schedule_table_state: TableState,
@@ -14,7 +23,7 @@ impl UiState {
 
         table_state.select_first();
         table_state.select_first_column();
-        
+
         UiState {
             schedule_table_state: table_state,
         }
