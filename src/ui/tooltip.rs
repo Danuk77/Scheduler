@@ -13,24 +13,24 @@ pub fn render_tooltip(selected_pane: Pane, frame: &mut Frame, area: &Rect) {
     match selected_pane {
         Pane::Schedule => {
             tooltip_string = String::from(
-                "Active pane: Schedule | hjkl: Move | Tab: Select next pane | Shif+Tab: Select previous pane | q: quit",
+                "Active pane: Schedule | hjkl: Move | Ctrl+d: Down | Ctrl+u: Up | Tab: Select next pane | Shif+Tab: Select previous pane | q: quit",
             );
         }
         Pane::AlgorithmStats => {
             tooltip_string = String::from(
-                "Active pane: Algorithm stats | Tab: Change pane | Shift+Tab: Select previous pane | q: quit",
+                "Active pane: Algorithm stats | hjkl: Move | Ctrl+d: Down | Ctrl+u: Up | Tab: Select next pane | Shift+Tab: Select previous pane | q: quit",
             );
         }
 
         Pane::Constraints => {
             tooltip_string = String::from(
-                "Active pane: Constraints | Tab: Change pane | Shift+Tab: Select previous pane | q: quit",
+                "Active pane: Constraints | hjkl: Move | Ctrl+d: Down | Ctrl+u: Up | Tab: Select next pane | Shift+Tab: Select previous pane | q: quit",
             );
         }
 
         Pane::Config => {
             tooltip_string = String::from(
-                "Active pane: Config | Tab: Change pane | Shift+Tab: Select previous pane | q: quit",
+                "Active pane: Config | hjkl: Move | Ctrl+d: Down | Ctrl+u: Up | Tab: Select next pane | Shift+Tab: Select previous pane | q: quit",
             );
         }
     }

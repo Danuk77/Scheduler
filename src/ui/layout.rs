@@ -26,7 +26,7 @@ pub fn create_app_layout(frame: &mut Frame) -> ScheduleScreenBlocks {
 
     let [schedule_block, _controls_block] = Layout::default()
         .direction(ratatui::layout::Direction::Horizontal)
-        .constraints([Constraint::Min(0), Constraint::Length(40)])
+        .constraints([Constraint::Min(0), Constraint::Length(45)])
         .areas(_content_block);
 
     let [algorithm_stats_block, config, constraints_block] = Layout::default()
