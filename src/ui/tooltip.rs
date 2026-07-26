@@ -6,21 +6,32 @@ use ratatui::{
 
 use crate::ui::{Pane, components::border::create_surrounding_border};
 
-pub fn render_tooltip(current_pane: Pane, frame: &mut Frame, area: &Rect) {
+pub fn render_tooltip(selected_pane: Pane, frame: &mut Frame, area: &Rect) {
     let tooltip_string: String;
-    let surrounding_border = create_surrounding_border(None);
+    let surrounding_border = create_surrounding_border(None, false);
 
-    match current_pane {
+    match selected_pane {
         Pane::Schedule => {
-            tooltip_string =
-                String::from("Active pane: Schedule | hjkl: Move | Tab: Change pane | q: quit");
+            tooltip_string = String::from(
+                "Active pane: Schedule | hjkl: Move | Tab: Select next pane | Shif+Tab: Select previous pane | q: quit",
+            );
         }
         Pane::AlgorithmStats => {
-            tooltip_string = String::from("Tab: Change pane");
+            tooltip_string = String::from(
+                "Active pane: Algorithm stats | Tab: Change pane | Shift+Tab: Select previous pane | q: quit",
+            );
         }
 
         Pane::Constraints => {
-            tooltip_string = String::from("Tab: Change pane");
+            tooltip_string = String::from(
+                "Active pane: Constraints | Tab: Change pane | Shift+Tab: Select previous pane | q: quit",
+            );
+        }
+
+        Pane::Config => {
+            tooltip_string = String::from(
+                "Active pane: Config | Tab: Change pane | Shift+Tab: Select previous pane | q: quit",
+            );
         }
     }
 

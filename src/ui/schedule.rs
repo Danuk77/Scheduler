@@ -4,21 +4,23 @@ use ratatui::{
     Frame,
     layout::{Constraint, Rect},
     style::{Color, Style},
-    widgets::{Cell, Row, Table, TableState},
+    widgets::{Cell, Row, Table},
 };
 
 use crate::{
-    constraints::constraint_store::ConstraintStore, schedule::Schedule,
-    ui::components::border::create_surrounding_border,
+    constraints::constraint_store::ConstraintStore,
+    schedule::Schedule,
+    ui::{Pane, UiState, components::border::create_surrounding_border},
 };
 
 pub fn render_schedule(
     schedule: &Schedule,
     frame: &mut Frame,
     area: &Rect,
-    table_state: &mut TableState,
     constraint_store: &ConstraintStore,
+    ui_state: &mut UiState,
 ) {
+    let is_pane_selected = matches!(ui_state.selected_pane, Pane::Schedule);
     let header = Row::new(vec![
         "Time", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun",
     ]);
@@ -35,13 +37,15 @@ pub fn render_schedule(
 
     let rows = _generate_table_rows(&schedule.grid, constraint_store);
 
-    let surrounding_border = create_surrounding_border(Some("Schedule"));
     let table = Table::new(rows, widths)
         .header(header.style(Style::new().bold()))
-        .block(surrounding_border)
+        .block(create_surrounding_border(
+            Some("Schedule"),
+            is_pane_selected,
+        ))
         .cell_highlight_style(Style::new().reversed().yellow());
 
-    frame.render_stateful_widget(table, *area, table_state);
+    frame.render_stateful_widget(table, *area, &mut ui_state.schedule_table_state);
 }
 
 fn _generate_table_rows(

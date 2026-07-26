@@ -11,9 +11,9 @@ use crate::{
     config::Config,
     constraints::constraint_store::{ConstraintStore, load_constraint_store_from_file},
     schedule::Schedule,
-    stats::OptimisationStats,
     ui::{
-        Pane, UiState, algorithm::render_algorithm_stats, constraints::render_constraints,
+        UiState, algorithm::render_algorithm_stats, config::render_config,
+        constraints::render_constraints, input_handler::handle_user_input,
         layout::create_app_layout, schedule::render_schedule, tooltip::render_tooltip,
     },
 };
@@ -42,16 +42,6 @@ impl App {
     }
 
     pub fn run<B: Backend>(self: &mut Self, terminal: &mut Terminal<B>) -> Result<(), String> {
-        let dummy_stats = OptimisationStats {
-            move_count: 0,
-            schedule_count: 0,
-            unscheduling_unscheduled_count: 0,
-            swap_count: 0,
-            unscheduling_scheduled_count: 0,
-            revert_count: 0,
-            reset_count: 0,
-        };
-
         loop {
             terminal
                 .draw(|frame| {
@@ -60,17 +50,18 @@ impl App {
                         &mut self.schedule,
                         frame,
                         &layout.schedule_block,
-                        &mut self.ui_state.schedule_table_state,
                         &self.constraint_store,
+                        &mut self.ui_state,
                     );
-                    render_tooltip(Pane::Schedule, frame, &layout.tooltip_block);
+                    render_tooltip(self.ui_state.selected_pane, frame, &layout.tooltip_block);
                     render_algorithm_stats(
                         frame,
                         &layout.algorithm_stats_block,
-                        Some(&dummy_stats),
-                        &mut self.ui_state.stats_list_state,
+                        None,
+                        &mut self.ui_state,
                     );
-                    render_constraints(frame, &layout.constraints_block);
+                    render_config(&self.config, frame, &layout.config, &mut self.ui_state);
+                    render_constraints(frame, &layout.constraints_block, &mut self.ui_state);
                 })
                 .map_err(|e| e.to_string())?;
 
@@ -79,25 +70,15 @@ impl App {
                     (KeyCode::Char('q'), KeyModifiers::NONE) => {
                         break;
                     }
-                    (KeyCode::Char('j'), KeyModifiers::NONE) => {
-                        self.ui_state.schedule_table_state.select_next();
+                    (KeyCode::Tab, KeyModifiers::NONE) => {
+                        self.ui_state.select_next_pane();
                     }
-                    (KeyCode::Char('k'), KeyModifiers::NONE) => {
-                        self.ui_state.schedule_table_state.select_previous();
+                    (KeyCode::BackTab, _) => {
+                        self.ui_state.select_previous_pane();
                     }
-                    (KeyCode::Char('h'), KeyModifiers::NONE) => {
-                        self.ui_state.schedule_table_state.select_previous_column();
+                    _ => {
+                        handle_user_input(&mut self.ui_state, key_event.code, key_event.modifiers);
                     }
-                    (KeyCode::Char('l'), KeyModifiers::NONE) => {
-                        self.ui_state.schedule_table_state.select_next_column();
-                    }
-                    (KeyCode::Char('d'), KeyModifiers::CONTROL) => {
-                        self.ui_state.schedule_table_state.scroll_down_by(15);
-                    }
-                    (KeyCode::Char('u'), KeyModifiers::CONTROL) => {
-                        self.ui_state.schedule_table_state.scroll_up_by(15);
-                    }
-                    _ => {}
                 }
             }
         }
