@@ -11,6 +11,7 @@ use crate::{
     config::Config,
     constraints::constraint_store::{ConstraintStore, load_constraint_store_from_file},
     schedule::Schedule,
+    stats::OptimisationStats,
     ui::{
         Pane, UiState, algorithm::render_algorithm_stats, constraints::render_constraints,
         layout::create_app_layout, schedule::render_schedule, tooltip::render_tooltip,
@@ -41,6 +42,16 @@ impl App {
     }
 
     pub fn run<B: Backend>(self: &mut Self, terminal: &mut Terminal<B>) -> Result<(), String> {
+        let dummy_stats = OptimisationStats {
+            move_count: 0,
+            schedule_count: 0,
+            unscheduling_unscheduled_count: 0,
+            swap_count: 0,
+            unscheduling_scheduled_count: 0,
+            revert_count: 0,
+            reset_count: 0,
+        };
+
         loop {
             terminal
                 .draw(|frame| {
@@ -53,7 +64,12 @@ impl App {
                         &self.constraint_store,
                     );
                     render_tooltip(Pane::Schedule, frame, &layout.tooltip_block);
-                    render_algorithm_stats(frame, &layout.schedule_fitness_block);
+                    render_algorithm_stats(
+                        frame,
+                        &layout.algorithm_stats_block,
+                        Some(&dummy_stats),
+                        &mut self.ui_state.stats_list_state,
+                    );
                     render_constraints(frame, &layout.constraints_block);
                 })
                 .map_err(|e| e.to_string())?;
